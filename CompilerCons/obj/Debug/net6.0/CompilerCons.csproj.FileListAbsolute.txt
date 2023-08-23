@@ -1,0 +1,15 @@
+/home/noor/compiler_construction/CompilerCons/bin/Debug/net6.0/CompilerCons
+/home/noor/compiler_construction/CompilerCons/bin/Debug/net6.0/CompilerCons.deps.json
+/home/noor/compiler_construction/CompilerCons/bin/Debug/net6.0/CompilerCons.runtimeconfig.json
+/home/noor/compiler_construction/CompilerCons/bin/Debug/net6.0/CompilerCons.dll
+/home/noor/compiler_construction/CompilerCons/bin/Debug/net6.0/CompilerCons.pdb
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/CompilerCons.csproj.AssemblyReference.cache
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/CompilerCons.GeneratedMSBuildEditorConfig.editorconfig
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/CompilerCons.AssemblyInfoInputs.cache
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/CompilerCons.AssemblyInfo.cs
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/CompilerCons.csproj.CoreCompileInputs.cache
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/CompilerCons.dll
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/refint/CompilerCons.dll
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/CompilerCons.pdb
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/CompilerCons.genruntimeconfig.cache
+/home/noor/compiler_construction/CompilerCons/obj/Debug/net6.0/ref/CompilerCons.dll
