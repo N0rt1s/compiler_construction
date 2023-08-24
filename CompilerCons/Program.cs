@@ -22,7 +22,7 @@ namespace CompilerCons
                             while ((line = reader.ReadLine()) != null)
                             {
                                 count+=1;
-                                var tokens=new Tokenization().MakeTokens(line);
+                                var tokens=new Tokenization().MakeTokens(count,line);
                                 // if(tokens==null){
                                 //     Console.WriteLine($"Error at line {count}");
                                 //     break;

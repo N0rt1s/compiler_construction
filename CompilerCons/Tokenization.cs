@@ -4,16 +4,17 @@ public class Tokenization
 {
 
     public Tokenization() { }
-    public char[] operators = { '+', '-', '=', '/', '*', '%' };
+    public char[] operators = { '+', '-', '=', '/', '*', '%','<','>' };
     public char[] punctuators = { '(', ')', '{', '}', ';' };
     public string[] keyWords = { "public", "private", "static", "class", "function", "struct", "new", "return", "break", "continue", "if", "else", "while", "for", "forEach", "switch", "case" };
     public string[] dataTypes = { "number", "string", "char", "bool", "void" };
     public string[] arrayDataTypes = { "number[]", "string[]", "char[]" };
     string identifier = @"^[a-zA-Z_][a-zA-Z0-9_]*$";
+    string numbers = @"^[0-9.]*$";
 
     public List<Dictionary<string, string>> makeParts(List<string> list)
     {
-        Console.WriteLine("Entered");
+        // Console.WriteLine("Entered");
         var parts = new List<Dictionary<string, string>>();
         foreach (var item in list)
         {
@@ -47,6 +48,10 @@ public class Tokenization
             {
                 dictionary1["class"] = "Identifier";
             }
+            else if (Regex.IsMatch(item, numbers))
+            {
+                dictionary1["class"] = "Numbers";
+            }
             else
             {
                 dictionary1["class"] = "InvalidToken";
@@ -62,8 +67,9 @@ public class Tokenization
         return parts;
     }
 
-    public List<string> MakeTokens(string line)
+    public List<string> MakeTokens(int count,string line)
     {
+        Console.WriteLine($"Line: {count}");
         List<string> tokens = new List<string>();
         // if (line[line.Length - 1] != ';')
         // {
