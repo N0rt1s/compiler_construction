@@ -23,10 +23,10 @@ namespace CompilerCons
                             {
                                 count+=1;
                                 var tokens=new Tokenization().MakeTokens(line);
-                                if(tokens==null){
-                                    Console.WriteLine($"Error at line {count}");
-                                    break;
-                                }
+                                // if(tokens==null){
+                                //     Console.WriteLine($"Error at line {count}");
+                                //     break;
+                                // }
                             }
                         }
                 }

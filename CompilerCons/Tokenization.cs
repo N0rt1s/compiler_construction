@@ -65,11 +65,11 @@ public class Tokenization
     public List<string> MakeTokens(string line)
     {
         List<string> tokens = new List<string>();
-        if (line[line.Length - 1] != ';')
-        {
-            // tokens.Add("Error");
-            return null;
-        }
+        // if (line[line.Length - 1] != ';')
+        // {
+        //     // tokens.Add("Error");
+        //     return null;
+        // }
         string token = string.Empty;
         foreach (var item in line)
         {
@@ -113,11 +113,6 @@ public class Tokenization
         if (!string.IsNullOrEmpty(token))
         {
             tokens.Add(token);
-        }
-        Console.WriteLine(tokens.Count);
-        foreach (var item in tokens)
-        {
-            Console.WriteLine(item);
         }
         makeParts(tokens);
         return tokens;
