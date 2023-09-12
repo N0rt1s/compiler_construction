@@ -1,0 +1,35 @@
+Globals:
+
+<Dt> --> number | char | string | bool[] |number[] | char[] | string[] | bool[]
+<OP> --> <Id> | <const>
+<CO> --> > | < | <= | >= | == | != 
+<bool> --> true | false
+<LOP> --> and | or
+<Inc_dec> --> ++ | -- 
+
+Declaration and Initialization:
+
+<Dec> --> <Dt> <Init>
+<Init> --> <Id> <List>
+<List> --> ,<Id> <const> <List> | = <Id> <const> <List> | ;
+
+
+
+Conditional Statements:
+
+<if_stat> --> if (<conditions>){<MST>}
+<conditions> --> <OP> <CO> <OP> <Econdition> | <Id> <Econdition> | <bool> <Econdition>
+<Econdition> --> <LOP> <conditions> |null
+
+<elif_stat> --> <if_stat> elif (<conditions>){<MST>}
+
+<else_stat> --> <if_stat> {<MST>} | <elif_stat> {<MST>}
+
+Loops:
+
+<for> --> for (<Part1> <OP> <CO> <OP>;<Id><Inc_dec> ){<MST>}
+<Part1> --> <Dec> | <Init> | ;
+
+<While> --> while (<conditions>){<MST>}
+
+<for_each> --> forEach(<Id> in <Id>)
