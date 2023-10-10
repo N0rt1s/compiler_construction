@@ -1,35 +1,91 @@
 Globals:
 
-<Dt> --> number | char | string | bool[] |number[] | char[] | string[] | bool[]
-<OP> --> <Id> | <const>
+<Dt> --> number <is_array> | char <is_array> | string <is_array> | bool <is_array>
+<is_array> --> [] | null
+
+<value> --> <OP> | <const>
+
 <CO> --> > | < | <= | >= | == | != 
+
 <bool> --> true | false
+
 <LOP> --> and | or
+
 <Inc_dec> --> ++ | -- 
+
+<index> --> <number> | <string>
+
+<OP> --> <Id> <ex_Id>
+<ex_Id> --> [<index>] <Id_loop> | (<parameters>) <Id_loop> 
+<Id_loop> --> . <Id> <Id_loop1> | null
+<Id_loop1> <ex_Id> | null
+
+<acces_specifiers> --> public | private | null
+
+<jump_stat> --> break; | continue;
+
+<CST> --> <function><CST> | <Dec> <CST>
+
+<MST> --> <acces_specifiers> <Dt> <Id> <Dec_Var_func> <MST>| <struct> <MST>| <if_stat> <MST>| <for> <MST>| <for_each> <MST>| <While> <MST>| <Id> <func_call_Id_set_class_init> <MST> | <jump_stat> <MST>
+
+<Dec_Var_func> --> null | (<is_params>){<MST> <return>}
+
+<func_call_Id_set_class_init> --> <ex_Id> <func_call_Id_set> | <Id>
+
+<func_call_Id_set> --> (<is_params>); | = <OP>;
+
+Starting:
+
+<S> --> <importing_modules> <rest>
+
+<importing_modules> --> # import <S_or_M> | null
+<S_or_M> --> <SI> | <MI>
+<SI> --> <Id> | {<Id><mutiple_Id>}
+<mutiple_Id> --> , <Id> | null
+
+<rest> --> <class> <more_classes>
+<more_classes> --> <rest> | null
 
 Declaration and Initialization:
 
-<Dec> --> <Dt> <Init>
-<Init> --> <Id> <List>
-<List> --> ,<Id> <const> <List> | = <Id> <const> <List> | ;
+<Dec> --> <acces_specifiers> <Dt> <Id> <List>
+<List> --> ,<Id> <put_value> <List> | ;
+<put_value> --> = <value> <List> | <List> 
 
+<function> --> <acces_specifiers> <Dt> <Id>(<is_params>){<MST> <return>}
+<is_params> --> <parameters> | null
+<parameters> --> <DT_or_Id> <Id> <more_param>
+<DT_or_Id> --> <Dt> | <Id>
+<more_param> --> , <parameters> | null
+<return> --> return <value> | null 
 
+<class> --> class <Id> { <constructor> <CST>}
+<constructor> --> <Id> (<is_params>){<MST>}
+
+<struct> --> struct <Id> {<CST>}
+
+<class_init> --> <Id> <Id> = new <Id>();
+
+<func_call> --> <OP>(<is_params>);
+
+<Id_value_set> --> <OP> = <OP>;
 
 Conditional Statements:
 
 <if_stat> --> if (<conditions>){<MST>}
-<conditions> --> <OP> <CO> <OP> <Econdition> | <Id> <Econdition> | <bool> <Econdition>
+<conditions> --> <value> <CO> <value> <Econdition> | <Id> <Econdition> | <bool> <Econdition>
 <Econdition> --> <LOP> <conditions> |null
 
 <elif_stat> --> <if_stat> elif (<conditions>){<MST>}
 
 <else_stat> --> <if_stat> {<MST>} | <elif_stat> {<MST>}
 
+
 Loops:
 
-<for> --> for (<Part1> <OP> <CO> <OP>;<Id><Inc_dec> ){<MST>}
+<for> --> for (<Part1> <value> <CO> <value>;<Id><Inc_dec> ){<MST>}
 <Part1> --> <Dec> | <Init> | ;
 
 <While> --> while (<conditions>){<MST>}
 
-<for_each> --> forEach(<Id> in <Id>)
+<for_each> --> forEach(<Id> in <Id>){<MST>}
