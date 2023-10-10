@@ -3,7 +3,7 @@ Globals:
 <Dt> --> number <is_array> | char <is_array> | string <is_array> | bool <is_array>
 <is_array> --> [] | null
 
-<value> --> <OP> | <const>
+<value> --> <VP> | <const>
 
 <CO> --> > | < | <= | >= | == | != 
 
@@ -15,24 +15,29 @@ Globals:
 
 <index> --> <number> | <string>
 
-<OP> --> <Id> <ex_Id>
-<ex_Id> --> [<index>] <Id_loop> | (<parameters>) <Id_loop> 
-<Id_loop> --> . <Id> <Id_loop1> | null
-<Id_loop1> <ex_Id> | null
+<OP> --> <Id> <ex_Id> | <Id>
+<ex_Id> --> [<index>] <Id_loop> | (<parameters>) <Id_loop1> 
+<Id_loop> --> . <OP> | (<parameters>) <Id_loop1> | null
+<Id_loop1> --> . <OP> 
+
+<VP> --> <Id> <ex_Id> | <Id>
+<ex_Id> --> [<index>] <Id_loop> | (<parameters>) <Id_loop1> 
+<Id_loop> --> . <VP> | (<parameters>) <Id_loop1> | null
+<Id_loop1> --> . <VP> | null
 
 <acces_specifiers> --> public | private | null
 
 <jump_stat> --> break; | continue;
 
-<CST> --> <function><CST> | <Dec> <CST>
+<CST> --> <acces_specifiers> <Dt> <Id> <Dec_Var_func> <CST>
 
 <MST> --> <acces_specifiers> <Dt> <Id> <Dec_Var_func> <MST>| <struct> <MST>| <if_stat> <MST>| <for> <MST>| <for_each> <MST>| <While> <MST>| <Id> <func_call_Id_set_class_init> <MST> | <jump_stat> <MST>
 
-<Dec_Var_func> --> null | (<is_params>){<MST> <return>}
+<Dec_Var_func> --> <List> | (<is_params>){<MST> <return>}
 
 <func_call_Id_set_class_init> --> <ex_Id> <func_call_Id_set> | <Id>
 
-<func_call_Id_set> --> (<is_params>); | = <OP>;
+<func_call_Id_set> --> (<is_params>); | = <value>;
 
 Starting:
 
@@ -68,7 +73,7 @@ Declaration and Initialization:
 
 <func_call> --> <OP>(<is_params>);
 
-<Id_value_set> --> <OP> = <OP>;
+<Id_value_set> --> <OP> = <value>;
 
 Conditional Statements:
 
