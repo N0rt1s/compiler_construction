@@ -1,6 +1,7 @@
 Globals:
 
-<Dt> --> number <is_array> | char <is_array> | string <is_array> | bool <is_array>
+<Dt> --> <Dts> <is_array> 
+<Dts> --> number | char | string | bool
 <is_array> --> [] | null
 
 <value> --> <VP> | <const>
@@ -64,7 +65,8 @@ Declaration and Initialization:
 <more_param> --> , <parameters> | null
 <return> --> return <value> | null 
 
-<class> --> class <Id> { <constructor> <CST>}
+<class> --> class <Id> <derived> { <constructor> <CST>}
+<derived> --> : <Id> | null
 <constructor> --> <Id> (<is_params>){<MST>}
 
 <struct> --> struct <Id> {<CST>}
