@@ -2,7 +2,7 @@
 
 #<importing_modules> --> # import <S_or_M> | null
 #<S_or_M> --> Id | { Id <mutiple_Id> }
-#<mutiple_Id> --> , Id | null
+#<mutiple_Id> --> , Id <mutiple_Id> | null
 
 #<rest> --> <class> <more_classes>
 #<more_classes> --> <rest> | null

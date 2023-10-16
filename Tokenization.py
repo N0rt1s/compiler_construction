@@ -24,8 +24,9 @@ class tokenization:
             "forEach",
             "switch",
             "case",
-            "#"
+            "import"
         ]
+        self.importer="#"
         self.dataTypes = ["number", "string", "char", "bool", "void"]
         self.arrayDataTypes = ["number[]", "string[]", "char[]"]
         self.quotes = r'["\']'
@@ -37,11 +38,13 @@ class tokenization:
 
     def makeParts(self, tokens):
         parts = []
-        print(tokens)
+        # print(tokens)
         for item in tokens:
             item=item.replace("\n","")
             dictionary1 = {"value": item}
-            if re.match(self.conditionalOperators, item):
+            if(item==self.importer):
+                dictionary1["class"] = "importer"
+            elif re.match(self.conditionalOperators, item):
                 dictionary1["class"] = "ConditionalOperator"
             elif re.match(self.operators, item):
                 dictionary1["class"] = "Operator"
@@ -53,16 +56,16 @@ class tokenization:
                 dictionary1["class"] = "DataType"
             elif item in self.arrayDataTypes:
                 dictionary1["class"] = "ArrayDataType"
-            elif re.search(r'["\']', item):
-                dictionary1["class"] = "Quotes"
+            # elif re.search(r'["\']', item):
+            #     dictionary1["class"] = "Quotes"
             elif re.match(self.Id, item):
-                dictionary1["class"] = "Identifier"
+                dictionary1["class"] = "Id"
             elif re.match(self.numConst, item):
-                dictionary1["class"] = "Numbers"
+                dictionary1["class"] = "numConst"
             elif re.match(self.charConst, item):
-                dictionary1["class"] = "Character"
+                dictionary1["class"] = "chrConst"
             elif re.match(self.strConst, item):
-                dictionary1["class"] = "String"
+                dictionary1["class"] = "strConst"
             else:
                 dictionary1["class"] = "InvalidToken"
             parts.append(dictionary1)
@@ -74,13 +77,13 @@ class tokenization:
         line.replace("\n", "")
         # print("line=>", line)
         for item in line:
-            print("item=>",item," token=>",token)
+            # print("item=>",item," token=>",token)
             if item == " ":
                 if token and token!="\n":
                     tokens.append(token.strip())
                 token = ""
             elif token and re.match(self.quotes,token[0]):
-                print("token")
+                # print("token")
                 if(token[0]==item):
                     token+=item
                     tokens.append(token.strip())
@@ -106,11 +109,14 @@ class tokenization:
                         if(re.match(self.quotes,item)):
                             token = ""
                             token+=item
+                            continue
                         else:
                             token = ""
                     if item == "=":
                         token = ""
                         token += item
+                    elif re.match(f"[{re.escape(self.punctuators)}]", item):
+                        tokens.append(item)   
                     else:
                         if token and token!="\n" and not re.match(self.quotes,token):
                             tokens.append(item)

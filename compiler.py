@@ -1,10 +1,5 @@
-import re
+
 from Tokenization import tokenization
-# Regular expression patterns
-Id = r"^[a-zA-Z_][a-zA-Z0-9_]*$"
-numConst = r"^[0-9.]*$"
-charConst = r"^[a-zA-Z0-9_]$"
-strConst = r'^"[^"]*"$'
 tokenizer = tokenization()
 allTokens=[]
 with open("CFG.txt", "r") as file:    
@@ -16,8 +11,12 @@ with open('testing.tx', 'r') as file:
             tokens=tokenizer.makeTokens(line)
             allTokens.extend(tokens)
 
+parts = tokenizer.makeParts(allTokens)
+for item in parts:
+    print(f"Class: {item['class']}, Value: {item['value']}")
 
 def check_parsing(token):
+    token_index=0
     valid_indic = [i for i, s in enumerate(lines) if s.startswith("#"+token)]
     print(lines[valid_indic[0]])
     paths = lines[valid_indic[0]].split("-->")[1].split("|")
@@ -29,6 +28,12 @@ def check_parsing(token):
             if token != "":
                 if token[0] == "<":
                     check_parsing(token)
+                elif token=="null":
+                    break
+                else:
+                    print(allTokens[token_index])
+
+
                     
 
 
@@ -39,8 +44,5 @@ def check_parsing(token):
 # print(content.split(" "))
 
 # check_parsing("<Start>")
-parts = tokenizer.makeParts(allTokens)
 # print(parts)
-for item in parts:
-    print(f"Class: {item['class']}, Value: {item['value']}")
 # Example Usage:
