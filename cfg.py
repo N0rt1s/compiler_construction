@@ -740,26 +740,26 @@ class cfg:
                 
         else:
             pass
-    def Id_loop(self):
-        if self.check_next_token("."):
-            self.accept_token()
-            self.OP()
-        elif self.check_next_token("("):
-            self.accept_token()
-            self.is_param_value()
-            if self.check_next_token(")"):
-                self.accept_token()
-                self.Id_loop()
-            else:
-                raise("Exception")
+    # def Id_loop(self):
+    #     if self.check_next_token("."):
+    #         self.accept_token()
+    #         self.OP()
+    #     elif self.check_next_token("("):
+    #         self.accept_token()
+    #         self.is_param_value()
+    #         if self.check_next_token(")"):
+    #             self.accept_token()
+    #             self.Id_loop()
+    #         else:
+    #             raise("Exception")
         
-        elif self.check_next_token):
-            self.accept_token()
-            pass
-    def Id_loop1(self):
-        if self.check_next_token("."):
-            self.accept_token()
-            self.OP()
+    #     elif self.check_next_token):
+    #         self.accept_token()
+    #         pass
+    # def Id_loop1(self):
+    #     if self.check_next_token("."):
+    #         self.accept_token()
+    #         self.OP()
             
             
             
