@@ -1,0 +1,99 @@
+	FIRST(Dt)= {FIRST<Dts>} = {number|char|string|bool}
+
+	FIRST(Dts)= {number|char|string|bool}
+
+	FIRST(is_array)={[]} ∪ {null} = {[]| null}
+
+	FIRST(<value>)={FIRST(<VP>)|const}={Id|const}
+
+	FIRST(<CO>)={>|<|<=|>=|==|!=}
+
+	FIRST(<bool>)={true|false}
+
+	FIRST(<LOP>)={and|or}
+
+	FIRST(<Inc_dec>)={++|−−}
+
+	FIRST(<index>)= {number|string}
+
+	FIRST(OP)={id}
+
+	FIRST(VP)={id}
+
+	FIRST<OP_more_Id> = {[|(|null}
+	
+	FIRST<VP_more_Id> = {[|(|null}
+
+	FIRST<VP_ex_id> = {[|(}
+	
+	FIRST<VP_ex_id> = {[|(}
+
+	FIRST<VP_Id_loop> = {.|(|null}
+	
+	FIRST<OP_Id_loop> = {.|(|null}
+
+	FIRST<OP_Id_loop> = {.|null}
+
+	FIRST<VP_Id_loop> = {.|null}
+
+	FIRST<acces_specifiers> = { public | private | null}
+
+	FIRST<jump_stat> = {break|continue}
+
+	FIRST<CST> = FIRST<access_specifiers>= {public | private | null}
+	
+	FIRST<MST>={public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+	
+	FIRST<Dec_Var_func> = {FIRST<List>,(}={,|;,(}
+
+	FIRST<func_call_Id_set_class_init>=FIRST<ex_Id>={[|(}
+
+	FIRST<func_call_Id_set>=FIRST<is_params>={(|=}
+
+	FIRST<Start>={#|class}
+
+	FIRST<importing_modules>={#|null}
+
+	FIRST<S_or_M>={id|{ }
+
+	FIRST<rest>={class}
+
+	FIRST<more_classes>={class|null}
+
+	FIRST<Dec>={public |private |null}
+
+	FIRST<List>= {,|;}
+
+	FIRST<put_value>= {=|,|;}
+
+	FIRST<function>=={public|private|number|char|string|bool}
+
+	FIRST<is_params>={number|char|string|bool|Id|null}
+
+	FIRST<parameters>={number|char|string|bool|Id}
+
+	FIRST<DT_or_Id>={number|char|string|bool|Id}
+
+	FIRST<more_param> = {,|null}
+
+	FIRST<return> = {return|null}
+
+	FIRST<class> ={class}
+
+	FIRST<derived> ={:,null}
+
+	FIRST<constructor> = {Id}
+
+	FIRST<struct> = {struct}
+
+	FIRST<class_init> = {Id}
+
+	FIRST<func_call> = FIRST(OP)={id}
+
+	FIRST<Id_value_set> =FIRST(OP)={id}
+
+	FIRST<if_stat>= if
+
+	FIRST <conditions>=FIRST<value>={const,id}
+
+	FIRST <Econdition>=FIRST<LOP>={and,or,null}
