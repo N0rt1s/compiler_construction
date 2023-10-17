@@ -60,7 +60,7 @@
 
 	FIRST<more_classes>={class|null}
 
-	FIRST<Dec>={public |private |null}
+	FIRST<Dec>={number|char|string|bool}
 
 	FIRST<List>= {,|;}
 
@@ -75,6 +75,12 @@
 	FIRST<DT_or_Id>={number|char|string|bool|Id}
 
 	FIRST<more_param> = {,|null}
+
+	FIRST<is_param_value> = {Id|null}
+
+	FIRST<param_values> = {Id}
+
+	FIRST<more_value_param> = {,|null}
 
 	FIRST<return> = {return|null}
 
@@ -93,6 +99,10 @@
 	FIRST<Id_value_set> =FIRST(OP)={id}
 
 	FIRST<if_stat>= if
+
+	FIRST<elif_stat>= elif
+	
+	FIRST<else_stat>= else
 
 	FIRST <conditions>=FIRST<value>={const,id}
 
