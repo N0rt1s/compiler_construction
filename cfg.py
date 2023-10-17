@@ -2,6 +2,9 @@ class cfg:
     def __init__(self, tokens) -> None:
         self.allTokens = tokens
         self.token_index = 0
+        self.scope=0
+        self.main_symbol_table=[]
+        self.class_symbol_table=[]
 
     def check_next_token_by_class(self, expected_value):
         return self.allTokens[self.token_index]["class"] == expected_value
