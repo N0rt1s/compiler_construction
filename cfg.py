@@ -181,3 +181,26 @@ class cfg:
             self.accept_token()
         elif self.check_next_token_by_class("ArrayDataType"):
             self.accept_token()
+            
+            
+            
+            
+            
+    def list(self):
+        if self.check_next_token(","):
+            self.accept_token()
+            if self.check_next_token_by_class("Id"):
+                self.accept_token()
+                self.put_value()
+                self.list()
+            else:
+                raise("Exception")
+        elif self.check_next_token(";"):
+            self.accept_token() 
+        else:
+            raise("Exception")
+        
+    def put(self):
+        
+        
+                
