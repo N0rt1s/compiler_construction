@@ -8,14 +8,14 @@
 ##<more_classes> --> <rest> | null
 
 ##<dt> --> <dts> <is_array> 
-#<dts> --> number | char | string | bool
+##<dts> --> number | char | string | bool
 ##<is_array> --> [] | null
 
 ##<value> --> <VP> | <const>
 
-#<const> --> strConst | charConst | boolConst | numConst | <arrConst>
+##<const> --> strConst | charConst | boolConst | numConst | <arrConst>
 
-#<arrConst> --> strArrConst | charArrConst | boolArrConst | numArrConst | objArrConst
+##<arrConst> --> strArrConst | charArrConst | boolArrConst | numArrConst | objArrConst
 
 ##<CO> --> > | < | <= | >= | == | != 
 
@@ -25,7 +25,7 @@
 
 ##<Inc_dec> --> ++ | -- 
 
-#<index> --> numConst
+##<index> --> numConst
 
 #<OP> --> Id <OP_more_Id>
 #<OP_more_Id> --> <OP_ex_Id> | null
@@ -42,16 +42,20 @@
 ##<acces_specifiers> --> public | private 
 
 ##<jump_stat> --> break; | continue; 
-
 ##<CST> --> <acces_specifiers> <dt> Id <Dec_Var_func> <CST> | null
 
 #<MST> --> <Dec> <MST>| <struct> <MST>| <if_stat> <MST>| <for> <MST>| <for_each> <MST>| #<While> <MST>| Id <func_call_Id_set_class_init> <MST> | <jump_stat> <MST>
 
-#<Dec_Var_func> --> <List> | ( <is_params> ) { <MST> <return_dec> }
+
+
+
+##<Dec_Var_func> --> <List> | ( <is_params> ) { <MST> <return_dec> }
 
 #<func_call_Id_set_class_init> --> <OP_ex_Id> <func_call_Id_set> | Id
 
-#<func_call_Id_set> --> ( <is_params> ) ; | = <value> ;
+
+
+##<func_call_Id_set> --> ( <is_params> ) ; | = <value> ;
 
 #<Dec> -->  <dt> Id <List>
 ##<List> --> ,Id <put_value> <List> | ; 
@@ -68,9 +72,9 @@
 ##<derived> --> : Id | null
 ##<constructor> --> Id ( <is_params> ) { <MST> }
 
-#<struct> --> struct Id { <CST> }
+##<struct> --> struct Id { <CST> }
 
-#<class_init> --> Id Id = new Id();
+##<class_init> --> Id Id = new Id();
 
 ##<func_call> --> <OP> ( <is_param_value> );
 
@@ -84,14 +88,15 @@
 ##<conditions> --> <VP> <m_condition> | <const> <CO> <value> <Econdition>  | <bool> <Econdition>
 #<m_condition> --> <CO> <value> <Econdition> | <Econdition>
 ##<Econdition> --> <lop> <conditions> |null
-
 ##<elif_stat> --> elif ( <conditions> ) { <MST> } <elif_stat> || null
-
 ##<else_stat> -->  else{ <MST> } | <if_stat>
 
 ##<for_loop> --> for ( <Part1> <value> <CO> <value> ; Id <Inc_dec> ){ <MST> }
-#<Part1> --> <Dec> | <Init> | ;
+
+
+#<Part1> --> <Dec>
+
+
 
 ##<While_loop> --> while ( <conditions> ){ <MST> }
-
 ##<for_each_loop> --> forEach ( Id in Id ){ <MST> }
