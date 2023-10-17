@@ -206,8 +206,123 @@ class cfg:
             pass
         
         
-    def function()       
+    def function(self):
+        self.acces_specifiers()
+        self.dt()
+        if self.check_next_token_by_class("Id"):
+            self.accept_token()
+            if self.check_next_token("("):
+                self.accept_token()
+                self.is_params()
+                if self.check_next_token(")"):
+                    self.accept_token()
+                    if self.check_next_token("{"):
+                        self.accept_token()
+                        self.MST()
+                        self.return_dec()
+                        if self.check_next_token("}"):
+                            self.accept_token()
+                        else:
+                             raise("Exception")
+                    else:
+                             raise("Exception")
+                else:
+                            raise("Exception")
+            else:
+                             raise("Exception")     
+        else:
+                             raise("Exception")
+                         
+                         
+    def return_dec(self):
+        if self.check_next_token("return"):
+            self.accept_token()
+            self.value()
+        else:
+            pass
+    def func_call(self):
+        self.OP()
+        if self.check_next_token("("):
+            self.accept_token()
+            self.is_param_value()
+            if self.check_next_token(")"):
+                self.accept_token()
+                if self.check_next_token(";"):
+                    self.accept_token()
+                else:
+                             raise("Exception")    
+            else:
+                             raise("Exception") 
+        else:
+                             raise("Exception")
+    def is_param_value(self):
+        if self.check_next_token(")"):
+            self.accept_token()
+            pass
+        else:
+            self.param_values()
             
+    def param_values(self):
+        self.OP()
+        self.more_value_param()
+    
+    def more_value_param(self):
+        if self.check_next_token(","):
+            self.accept_token()
+            self.param_values()
+        else:
+            pass
+    def Id_value_set(self):
+        self.OP()
+        if self.check_next_token("="):
+            self.accept_token()
+            self.value()
+            if self.check_next_token(";"):
+                self.accept_token()
+            else:
+                raise("Exception")
+        else:
+                raise("Exception")
+    def if_stat(self):
+        if self.check_next_token("if"):
+            self.accept_token()
+            if self.check_next_token("("):
+                self.accept_token()
+                self.condition()
+                if self.check_next_token(")"):
+                    self.accept_token()
+                    if self.check_next_token("{"):
+                        self.accept_token()
+                        self.MST()
+                        if self.check_next_token("}"):
+                            self.accept_token()
+                        else:
+                            raise("Exception")
+                    else:
+                            raise("Exception")
+                else:
+                            raise("Exception")
+            else:
+                            raise("Exception")
+        else:
+                            raise("Exception")
+    def conditions(self):
+        if self.check_next_token_by_class("Id"):
+            self.accept_token()
+            
+        self.value()
+        self.CO()
+        self.value()
+        self.Econdition()
+        
+        
+                        
+        
+            
+        
+        
+            
+        
             
         
         

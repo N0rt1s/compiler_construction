@@ -7,23 +7,23 @@
 ##<rest> --> <class_dec> <more_classes>
 ##<more_classes> --> <rest> | null
 
-##<Dt> --> <Dts> <is_array> 
-#<Dts> --> number | char | string | bool
-#<is_array> --> [] | null
+##<dt> --> <dts> <is_array> 
+#<dts> --> number | char | string | bool
+##<is_array> --> [] | null
 
-#<value> --> <VP> | <const>
+##<value> --> <VP> | <const>
 
 #<const> --> strConst | charConst | boolConst | numConst | <arrConst>
 
 #<arrConst> --> strArrConst | charArrConst | boolArrConst | numArrConst | objArrConst
 
-#<CO> --> > | < | <= | >= | == | != 
+##<CO> --> > | < | <= | >= | == | != 
 
-#<bool> --> true | false
+##<bool> --> true | false
 
-#<LOP> --> and | or
+##<lop> --> and | or
 
-#<Inc_dec> --> ++ | -- 
+##<Inc_dec> --> ++ | -- 
 
 #<index> --> numConst
 
@@ -39,28 +39,28 @@
 
 ##<acces_specifiers> --> public | private | null
 
-#<jump_stat> --> break; | continue; 
+##<jump_stat> --> break; | continue; 
 
-##<CST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <CST> | null
+##<CST> --> <acces_specifiers> <dt> Id <Dec_Var_func> <CST> | null
 
-#<MST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <MST>| <struct> <MST>| <if_stat> <MST>| <for> <MST>| <for_each> <MST>| #<While> <MST>| Id <func_call_Id_set_class_init> <MST> | <jump_stat> <MST>
+#<MST> --> <acces_specifiers> <dt> Id <Dec_Var_func> <MST>| <struct> <MST>| <if_stat> <MST>| <for> <MST>| <for_each> <MST>| #<While> <MST>| Id <func_call_Id_set_class_init> <MST> | <jump_stat> <MST>
 
-#<Dec_Var_func> --> <List> | ( <is_params> ) { <MST> <return> }
+#<Dec_Var_func> --> <List> | ( <is_params> ) { <MST> <return_dec> }
 
 #<func_call_Id_set_class_init> --> <ex_Id> <func_call_Id_set> | Id
 
 #<func_call_Id_set> --> ( <is_params> ) ; | = <value> ;
 
-#<Dec> --> <acces_specifiers> <Dt> Id <List>
+#<Dec> --> <acces_specifiers> <dt> Id <List>
 ##<List> --> ,Id <put_value> <List> | ; 
 ##<put_value> --> = <value> <List> | null
 
-##<function> --> <acces_specifiers> <Dt> Id(<is_params>){<MST> <return>}
+##<function> --> <acces_specifiers> <dt> Id(<is_params>){<MST> <return_dec>}
 ##<is_params> --> <parameters> | null
-##<parameters> --> <DT_or_Id> Id <more_param>
-##<DT_or_Id> --> <Dt> | Id
+##<parameters> --> <dt_or_Id> Id <more_param>
+##<dt_or_Id> --> <dt> | Id
 ##<more_param> --> , <parameters> | null
-#<return> --> return <value> | null 
+##<return_dec> --> return <value> | null 
 
 ##<class_dec> --> class Id <derived> { <constructor> <CST>}
 ##<derived> --> : Id | null
@@ -70,25 +70,25 @@
 
 #<class_init> --> Id Id = new Id();
 
-#<func_call> --> <OP> ( <is_param_value> );
+##<func_call> --> <OP> ( <is_param_value> );
 
-#<is_param_value> --> <param_values> | null
-#<param_values> --> <OP> <more_value_param>
-#<more_value_param> --> , <param_values> | null
+##<is_param_value> --> <param_values> | null
+##<param_values> --> <OP> <more_value_param>
+##<more_value_param> --> , <param_values> | null
 
-#<Id_value_set> --> <OP> = <value>;
+##<Id_value_set> --> <OP> = <value>;
 
-#<if_stat> --> if ( <conditions> ) { <MST> }
-#<conditions> --> <value> <CO> <value> <Econdition> | Id <Econdition> | <bool> <Econdition>
-#<Econdition> --> <LOP> <conditions> |null
+##<if_stat> --> if ( <conditions> ) { <MST> } <elif_stat> <else_stat>
+##<conditions> --> <value> <CO> <value> <Econdition> | Id <Econdition> | <bool> <Econdition>
+##<Econdition> --> <lop> <conditions> |null
 
-#<elif_stat> --> <if_stat> elif ( <conditions> ) { <MST> }
+##<elif_stat> --> elif ( <conditions> ) { <MST> } <elif_stat> || null
 
-#<else_stat> --> <if_stat> { <MST> } | <elif_stat> { <MST> }
+##<else_stat> -->  else{ <MST> } | <if_stat>
 
-#<for> --> for ( <Part1> <value> <CO> <value> ; Id <Inc_dec> ){ <MST> }
+##<for_loop> --> for ( <Part1> <value> <CO> <value> ; Id <Inc_dec> ){ <MST> }
 #<Part1> --> <Dec> | <Init> | ;
 
-#<While> --> while ( <conditions> ){ <MST> }
+##<While_loop> --> while ( <conditions> ){ <MST> }
 
-#<for_each> --> forEach ( Id in Id ){ <MST> }
+##<for_each_loop> --> forEach ( Id in Id ){ <MST> }
