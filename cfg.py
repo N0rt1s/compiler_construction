@@ -11,6 +11,8 @@ class cfg:
 
     def accept_token(self, isDeclaration):
         self.token_index += 1
+        if len(self.allTokens) > self.token_index:
+            self.token_index = -1
 
     def start(self):
         self.importing_modules()
@@ -23,7 +25,7 @@ class cfg:
                 self.accept_token()
                 self.S_or_M()
             else:
-                raise("Exception")    
+                raise ("Exception")
         else:
             pass
 
@@ -34,8 +36,14 @@ class cfg:
             if self.check_next_token_by_class("Id"):
                 self.accept_token()
                 self.mutiple_Id()
-            elif self.check_next_token("}"):
-                self.accept_token()
+                if self.check_next_token("}"):
+                    self.accept_token()
+                else:
+                    raise ("Exeption")
+            else:
+                raise ("Exeption")
+        else:
+            raise ("Exeption")
 
     def mutiple_Id(self):
         if self.check_next_token(","):
@@ -43,6 +51,8 @@ class cfg:
             if self.check_next_token_by_class("Id"):
                 self.accept_token()
                 self.mutiple_Id()
+            else:
+                raise ("Exeption")
         else:
             pass
 
@@ -51,7 +61,10 @@ class cfg:
         self.more_classes()
 
     def more_classes(self):
-        self.rest()    
+        if self.token_index != -1:
+            self.rest()
+        else:
+            print("Parsing Complete")
 
     def class_dec(self):
         if self.check_next_token("class"):
@@ -65,12 +78,22 @@ class cfg:
                     self.cst()
                     if self.check_next_token("}"):
                         self.accept_token()
+                    else:
+                        raise ("Exeption")
+                else:
+                    raise ("Exeption")
+            else:
+                raise ("Exeption")
+        else:
+            raise ("Exeption")
 
     def derived(self):
         if self.check_next_token(":"):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
                 self.accept_token()
+            else:
+                raise ("Exeption")
         else:
             pass
 
@@ -97,7 +120,7 @@ class cfg:
                 raise ("Exception")
         else:
             raise ("Exception")
-        
+
     def is_params(self):
         if self.check_next_token(")"):
             self.accept_token()
@@ -111,32 +134,36 @@ class cfg:
             self.accept_token()
             self.more_params()
         else:
-            raise("Exception") 
+            raise ("Exception")
 
     def dt_or_id(self):
         if self.check_next_token_by_class("DataType"):
             self.accept_token()
         elif self.check_next_token_by_class("Id"):
-            self.accept_token() 
+            self.accept_token()
         else:
-            raise("Exception") 
+            raise ("Exception")
 
     def more_params(self):
         if self.check_next_token(","):
             self.accept_token()
-            self.parameters() 
+            self.parameters()
         else:
-            pass                            
-        
+            pass
+
     def cst(self):
-        self.acces_specifiers()
-        self.dt()
-        if self.check_next_token_by_class("Id"):
+        if self.check_next_token("}"):
             self.accept_token()
-            self.Dec_Var_func()
-            self.cst()
+            pass
         else:
-            raise("Exception")  
+            self.acces_specifiers()
+            self.dt()
+            if self.check_next_token_by_class("Id"):
+                self.accept_token()
+                self.Dec_Var_func()
+                self.cst()
+            else:
+                raise ("Exception")
 
     def acces_specifiers(self):
         if self.check_next_token("public"):
