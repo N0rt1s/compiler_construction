@@ -64,7 +64,7 @@
 ##<more_param> --> , <parameters> | null
 ##<return_dec> --> return <value> | null 
 
-##<class_dec> --> class Id <derived> { <constructor> <CST>}
+##<class_dec> --> <acces_specifiers> class Id <derived> { <constructor> <CST>}
 ##<derived> --> : Id | null
 ##<constructor> --> Id ( <is_params> ) { <MST> }
 
@@ -81,7 +81,8 @@
 ##<Id_value_set> --> <OP> = <value>;
 
 ##<if_stat> --> if ( <conditions> ) { <MST> } <elif_stat> <else_stat>
-##<conditions> --> <value> <CO> <value> <Econdition> | Id <Econdition> | <bool> <Econdition>
+##<conditions> --> <VP> <m_condition> | <const> <CO> <value> <Econdition>  | <bool> <Econdition>
+#<m_condition> --> <CO> <value> <Econdition> | <Econdition>
 ##<Econdition> --> <lop> <conditions> |null
 
 ##<elif_stat> --> elif ( <conditions> ) { <MST> } <elif_stat> || null

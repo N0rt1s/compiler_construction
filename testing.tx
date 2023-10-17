@@ -1,14 +1,5 @@
 # import gg
 
 public class aa{
-    number mm;
-
-    public char ss(number at){
-        mm=at;
-        string as="adsad";
-
-        if(mm==22){
-            mm=1;
-        }
-    } 
+    aa( ) { }
 }

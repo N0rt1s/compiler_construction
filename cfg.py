@@ -2,9 +2,9 @@ class cfg:
     def __init__(self, tokens) -> None:
         self.allTokens = tokens
         self.token_index = 0
-        self.scope=0
-        self.main_symbol_table=[]
-        self.class_symbol_table=[]
+        self.scope = 0
+        self.main_symbol_table = []
+        self.class_symbol_table = []
 
     def check_next_token_by_class(self, expected_value):
         return self.allTokens[self.token_index]["class"] == expected_value
@@ -12,9 +12,9 @@ class cfg:
     def check_next_token(self, expected_value):
         return self.allTokens[self.token_index]["value"] == expected_value
 
-    def accept_token(self, isDeclaration):
+    def accept_token(self):
         self.token_index += 1
-        if len(self.allTokens) > self.token_index:
+        if self.token_index > (len(self.allTokens)-1):
             self.token_index = -1
 
     def start(self):
@@ -70,6 +70,7 @@ class cfg:
             print("Parsing Complete")
 
     def class_dec(self):
+        self.acces_specifiers()
         if self.check_next_token("class"):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
@@ -124,10 +125,12 @@ class cfg:
         else:
             raise ("Exception")
 
+    def mst(self):
+        pass
 
     def is_params(self):
         if self.check_next_token(")"):
-            self.accept_token()
+            # self.accept_token()
             pass
         else:
             self.parameters()
@@ -157,7 +160,7 @@ class cfg:
 
     def cst(self):
         if self.check_next_token("}"):
-            self.accept_token()
+            # self.accept_token()
             pass
         else:
             self.acces_specifiers()
@@ -182,11 +185,7 @@ class cfg:
             self.accept_token()
         elif self.check_next_token_by_class("ArrayDataType"):
             self.accept_token()
-            
-            
-            
-            
-            
+
     def list(self):
         if self.check_next_token(","):
             self.accept_token()
@@ -195,12 +194,12 @@ class cfg:
                 self.put_value()
                 self.list()
             else:
-                raise("Exception")
+                raise ("Exception")
         elif self.check_next_token(";"):
-            self.accept_token() 
+            self.accept_token()
         else:
-            raise("Exception")
-        
+            raise ("Exception")
+
     def put_value(self):
         if self.check_next_token("="):
             self.accept_token()
@@ -208,8 +207,7 @@ class cfg:
             self.list()
         else:
             pass
-        
-        
+
     def function(self):
         self.acces_specifiers()
         self.dt()
@@ -227,23 +225,23 @@ class cfg:
                         if self.check_next_token("}"):
                             self.accept_token()
                         else:
-                             raise("Exception")
+                            raise ("Exception")
                     else:
-                             raise("Exception")
+                        raise ("Exception")
                 else:
-                            raise("Exception")
+                    raise ("Exception")
             else:
-                             raise("Exception")     
+                raise ("Exception")
         else:
-                             raise("Exception")
-                         
-                         
+            raise ("Exception")
+
     def return_dec(self):
         if self.check_next_token("return"):
             self.accept_token()
             self.value()
         else:
             pass
+
     def func_call(self):
         self.OP()
         if self.check_next_token("("):
@@ -254,28 +252,30 @@ class cfg:
                 if self.check_next_token(";"):
                     self.accept_token()
                 else:
-                             raise("Exception")    
+                    raise ("Exception")
             else:
-                             raise("Exception") 
+                raise ("Exception")
         else:
-                             raise("Exception")
+            raise ("Exception")
+
     def is_param_value(self):
         if self.check_next_token(")"):
             self.accept_token()
             pass
         else:
             self.param_values()
-            
+
     def param_values(self):
         self.OP()
         self.more_value_param()
-    
+
     def more_value_param(self):
         if self.check_next_token(","):
             self.accept_token()
             self.param_values()
         else:
             pass
+
     def Id_value_set(self):
         self.OP()
         if self.check_next_token("="):
@@ -284,9 +284,10 @@ class cfg:
             if self.check_next_token(";"):
                 self.accept_token()
             else:
-                raise("Exception")
+                raise ("Exception")
         else:
-                raise("Exception")
+            raise ("Exception")
+
     def if_stat(self):
         if self.check_next_token("if"):
             self.accept_token()
@@ -301,43 +302,51 @@ class cfg:
                         if self.check_next_token("}"):
                             self.accept_token()
                         else:
-                            raise("Exception")
+                            raise ("Exception")
                     else:
-                            raise("Exception")
+                        raise ("Exception")
                 else:
-                            raise("Exception")
+                    raise ("Exception")
             else:
-                            raise("Exception")
+                raise ("Exception")
         else:
-                            raise("Exception")
+            raise ("Exception")
+
     def conditions(self):
-        if self.check_next_token_by_class("Id"):
+        if (
+            self.check_next_token_by_class("strConst")
+            or self.check_next_token_by_class("charConst")
+            or self.check_next_token_by_class("boolConst")
+            or self.check_next_token_by_class("numConst")
+        ):
             self.accept_token()
+            self.CO()
+            self.value()
             self.Econdition()
         elif self.check_next_token("true") or self.check_next_token("false"):
             self.accept_token()
             self.Econdition()
-        elif :
-        self.value()
-        self.CO()
-        self.value()
-        self.Econdition()
-        
+        elif self.check_next_token_by_class("Id"):
+            self.VP_more_Id()
+        else:
+            raise("Exception")
+
     def Econdition(self):
         if self.check_next_token(")"):
             self.accept_token()
             pass
         else:
-             self.lop()
-             self.conditions()
-             
+            self.lop()
+            self.conditions()
+
     def lop(self):
         if self.check_next_token("and"):
             self.accept_token()
         elif self.check_next_token("or"):
             self.accept_token()
         else:
-            raise("Exception")
+            raise ("Exception")
+
     def elif_stat(self):
         if self.check_next_token("elif"):
             self.accept_token()
@@ -347,39 +356,40 @@ class cfg:
                 if self.check_next_token(")"):
                     self.accept_token()
                     if self.check_next_token("{"):
-                      self.accept_token()
-                      self.MST()
-                      if self.check_next_token("}"):
-                          self.accept_token()
-                          self.elif_stat()
-                      else:
-                          raise("Exception")
+                        self.accept_token()
+                        self.MST()
+                        if self.check_next_token("}"):
+                            self.accept_token()
+                            self.elif_stat()
+                        else:
+                            raise ("Exception")
                     else:
-                         raise("Exception")
+                        raise ("Exception")
                 else:
-                         raise("Exception")
+                    raise ("Exception")
             else:
-                         raise("Exception")
+                raise ("Exception")
         else:
-                         pass        
+            pass
+
     def else_stat(self):
         if self.check_next_token("else"):
             self.accept_token()
             if self.check_next_token("{"):
-             self.accept_token()
-             self.MST()
-             if self.check_next_token("}"):
                 self.accept_token()
-             else:
-                raise("Exception")
+                self.MST()
+                if self.check_next_token("}"):
+                    self.accept_token()
+                else:
+                    raise ("Exception")
             elif self.check_next_token("if"):
-                       self.if_stat()
+                self.if_stat()
             else:
-                raise("Exception")
-            
+                raise ("Exception")
+
         else:
             pass
-        
+
     def for_loop(self):
         if self.check_next_token("for"):
             self.accept_token()
@@ -402,22 +412,23 @@ class cfg:
                                 if self.check_next_token("}"):
                                     self.accept_token()
                                 else:
-                                    raise("Exception")
+                                    raise ("Exception")
                             else:
-                                    raise("Exception")
+                                raise ("Exception")
                         else:
-                                    raise("Exception")
+                            raise ("Exception")
                     else:
-                                    raise("Exception")
+                        raise ("Exception")
                 else:
-                                    raise("Exception")
+                    raise ("Exception")
             else:
-                                    raise("Exception")
-       # else:
-                                    raise("Exception")
+                raise ("Exception")
+                # else:
+                raise ("Exception")
+
     def part1(self):
         self.dec()
-    
+
     def while_loop(self):
         if self.check_next_token("while"):
             self.accept_token()
@@ -432,15 +443,16 @@ class cfg:
                         if self.check_next_token("}"):
                             self.accept_token()
                         else:
-                                    raise("Exception")
+                            raise ("Exception")
                     else:
-                                    raise("Exception")
+                        raise ("Exception")
                 else:
-                                    raise("Exception")
+                    raise ("Exception")
             else:
-                                    raise("Exception")
-        #else:
-                                    raise("Exception")
+                raise ("Exception")
+                # else:
+                raise ("Exception")
+
     def for_each_loop(self):
         if self.check_next_token("forEach"):
             self.accept_token()
@@ -449,72 +461,75 @@ class cfg:
                 if self.check_next_token_by_class("Id"):
                     self.accept_token()
                     if self.check_next_token("in"):
-                        self.accept_token()                    
+                        self.accept_token()
                         if self.check_next_token_by_class("Id"):
-                               self.accept_token()
-                               if self.check_next_token(")"):
-                                  self.accept_token()
-                                  if self.check_next_token("{"):
-                                   self.accept_token()
-                                   self.MST()
-                                   if self.check_next_token("}"):
+                            self.accept_token()
+                            if self.check_next_token(")"):
+                                self.accept_token()
+                                if self.check_next_token("{"):
                                     self.accept_token()
-                                   else:
-                                        raise("Exception")
-                                  else:
-                                        raise("Exception")
-                               else:
-                                    raise("Exception")
+                                    self.MST()
+                                    if self.check_next_token("}"):
+                                        self.accept_token()
+                                    else:
+                                        raise ("Exception")
+                                else:
+                                    raise ("Exception")
+                            else:
+                                raise ("Exception")
                         else:
-                                    raise("Exception")
+                            raise ("Exception")
                     else:
-                                    raise("Exception")
+                        raise ("Exception")
                 else:
-                                    raise("Exception")
+                    raise ("Exception")
             else:
-                                    raise("Exception")
-        #else:
-                                    raise("Exception")
+                raise ("Exception")
+                # else:
+                raise ("Exception")
+
     def is_array(self):
         if self.check_next_token("["):
+            self.accept_token()
+            if self.check_next_token("]"):
                 self.accept_token()
-                if self.check_next_token("]"):
-                    self.accept_token()
-                else:
-                                    raise("Exception")
+            else:
+                raise ("Exception")
         else:
             pass
-    
+
     def value(self):
         if self.check_next_token_by_class("Id"):
             self.vp()
         else:
             self.const()
+
     def bool(self):
         if self.check_next_token("true"):
             self.accept_token()
         elif self.check_next_token("false"):
-                self.accept_token()
+            self.accept_token()
+
     def Inc_dec(self):
         if self.check_next_token("++"):
             self.accept_token()
         elif self.check_next_token("--"):
-                self.accept_token()
-                
+            self.accept_token()
+
     def CO(self):
         if self.check_next_token(">"):
             self.accept_token()
         elif self.check_next_token("<"):
-                self.accept_token()
+            self.accept_token()
         elif self.check_next_token("<="):
-                self.accept_token()
+            self.accept_token()
         elif self.check_next_token(">="):
-                self.accept_token()
+            self.accept_token()
         elif self.check_next_token("=="):
-                self.accept_token()
+            self.accept_token()
         elif self.check_next_token("!="):
-                self.accept_token()
-    
+            self.accept_token()
+
     def jump_stat(self):
         if self.check_next_token("break"):
             self.accept_token()
@@ -524,34 +539,3 @@ class cfg:
             self.accept_token()
             if self.check_next_token(";"):
                 self.accept_token()
-    
-                
-
-            
-    
-    
-        
-        
-               
-             
-            
-        
-
-        
-        
-        
-    
-        
-            
-                        
-        
-            
-        
-        
-            
-        
-            
-        
-        
-        
-                

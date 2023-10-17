@@ -21,11 +21,11 @@ parts = tokenizer.makeParts(allTokens)
 
 
 def check_parsing():
-    cfg_parser = cfg(allTokens) 
+    cfg_parser = cfg(parts) 
     cfg_parser.start()
 
 
-
+check_parsing()
 
 
 # def check_parsing(token):
