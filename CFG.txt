@@ -39,7 +39,7 @@
 
 #<acces_specifiers> --> public | private | null
 
-#<jump_stat> --> break; | continue;
+#<jump_stat> --> break; | continue; 
 
 #<CST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <CST> | null
 
@@ -52,7 +52,7 @@
 #<func_call_Id_set> --> ( <is_params> ) ; | = <value> ;
 
 #<Dec> --> <acces_specifiers> <Dt> Id <List>
-#<List> --> ,Id <put_value> <List> | ;
+#<List> --> ,Id <put_value> <List> | ; 
 #<put_value> --> = <value> <List> | <List> 
 
 #<function> --> <acces_specifiers> <Dt> Id(<is_params>){<MST> <return>}
