@@ -4,7 +4,7 @@
 #<S_or_M> --> Id | { Id <mutiple_Id> }
 #<mutiple_Id> --> , Id <mutiple_Id> | null
 
-#<rest> --> <class> <more_classes>
+#<rest> --> <class_dec> <more_classes>
 #<more_classes> --> <rest> | null
 
 #<Dt> --> <Dts> <is_array> 
@@ -41,7 +41,7 @@
 
 #<jump_stat> --> break; | continue;
 
-#<CST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <CST>
+#<CST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <CST> | null
 
 #<MST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <MST>| <struct> <MST>| <if_stat> <MST>| <for> <MST>| <for_each> <MST>| #<While> <MST>| Id <func_call_Id_set_class_init> <MST> | <jump_stat> <MST>
 
@@ -62,7 +62,7 @@
 #<more_param> --> , <parameters> | null
 #<return> --> return <value> | null 
 
-#<class> --> class Id <derived> { <constructor> <CST>}
+#<class_dec> --> class Id <derived> { <constructor> <CST>}
 #<derived> --> : Id | null
 #<constructor> --> Id ( <is_params> ) { <MST> }
 
