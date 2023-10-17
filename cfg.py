@@ -10,9 +10,9 @@ class cfg:
         return self.allTokens[self.token_index]["value"] == expected_value
 
     def accept_token(self, isDeclaration):
+        self.token_index += 1
         if len(self.allTokens) > self.token_index:
             self.token_index = -1
-        self.token_index += 1
 
     def start(self):
         self.importing_modules()
@@ -152,14 +152,18 @@ class cfg:
             pass
 
     def cst(self):
-        self.acces_specifiers()
-        self.dt()
-        if self.check_next_token_by_class("Id"):
+        if self.check_next_token("}"):
             self.accept_token()
-            self.Dec_Var_func()
-            self.cst()
+            pass
         else:
-            raise ("Exception")
+            self.acces_specifiers()
+            self.dt()
+            if self.check_next_token_by_class("Id"):
+                self.accept_token()
+                self.Dec_Var_func()
+                self.cst()
+            else:
+                raise ("Exception")
 
     def acces_specifiers(self):
         if self.check_next_token("public"):
