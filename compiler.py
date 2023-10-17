@@ -18,10 +18,10 @@ parts = tokenizer.makeParts(allTokens)
 # for item in parts:
 #     print(f"Class: {item['class']}, Value: {item['value']}")
 
-cfg_parser = cfg(allTokens)
 
 
 def check_parsing():
+    cfg_parser = cfg(allTokens) 
     cfg_parser.start()
 
 
