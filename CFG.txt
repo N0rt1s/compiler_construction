@@ -1,13 +1,13 @@
-#<Start> --> <importing_modules> <rest>
+##<Start> --> <importing_modules> <rest>
 
-#<importing_modules> --> # import <S_or_M> | null
-#<S_or_M> --> Id | { Id <mutiple_Id> }
-#<mutiple_Id> --> , Id <mutiple_Id> | null
+##<importing_modules> --> # import <S_or_M> | null
+##<S_or_M> --> Id | { Id <mutiple_Id> }
+##<mutiple_Id> --> , Id <mutiple_Id> | null
 
-#<rest> --> <class_dec> <more_classes>
-#<more_classes> --> <rest> | null
+##<rest> --> <class_dec> <more_classes>
+##<more_classes> --> <rest> | null
 
-#<Dt> --> <Dts> <is_array> 
+##<Dt> --> <Dts> <is_array> 
 #<Dts> --> number | char | string | bool
 #<is_array> --> [] | null
 
@@ -37,11 +37,11 @@
 #<Id_loop> --> . <VP> | ( <is_param_value> ) <Id_loop1> | null
 #<Id_loop1> --> . <VP> | null
 
-#<acces_specifiers> --> public | private | null
+##<acces_specifiers> --> public | private | null
 
 #<jump_stat> --> break; | continue; 
 
-#<CST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <CST> | null
+##<CST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <CST> | null
 
 #<MST> --> <acces_specifiers> <Dt> Id <Dec_Var_func> <MST>| <struct> <MST>| <if_stat> <MST>| <for> <MST>| <for_each> <MST>| #<While> <MST>| Id <func_call_Id_set_class_init> <MST> | <jump_stat> <MST>
 
@@ -52,19 +52,19 @@
 #<func_call_Id_set> --> ( <is_params> ) ; | = <value> ;
 
 #<Dec> --> <acces_specifiers> <Dt> Id <List>
-#<List> --> ,Id <put_value> <List> | ; 
-#<put_value> --> = <value> <List> | <List> 
+##<List> --> ,Id <put_value> <List> | ; 
+##<put_value> --> = <value> <List> | null
 
-#<function> --> <acces_specifiers> <Dt> Id(<is_params>){<MST> <return>}
-#<is_params> --> <parameters> | null
-#<parameters> --> <DT_or_Id> Id <more_param>
-#<DT_or_Id> --> <Dt> | Id
-#<more_param> --> , <parameters> | null
+##<function> --> <acces_specifiers> <Dt> Id(<is_params>){<MST> <return>}
+##<is_params> --> <parameters> | null
+##<parameters> --> <DT_or_Id> Id <more_param>
+##<DT_or_Id> --> <Dt> | Id
+##<more_param> --> , <parameters> | null
 #<return> --> return <value> | null 
 
-#<class_dec> --> class Id <derived> { <constructor> <CST>}
-#<derived> --> : Id | null
-#<constructor> --> Id ( <is_params> ) { <MST> }
+##<class_dec> --> class Id <derived> { <constructor> <CST>}
+##<derived> --> : Id | null
+##<constructor> --> Id ( <is_params> ) { <MST> }
 
 #<struct> --> struct Id { <CST> }
 

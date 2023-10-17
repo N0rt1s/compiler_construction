@@ -197,7 +197,19 @@ class cfg:
         else:
             raise("Exception")
         
-    def put(self):
+    def put_value(self):
+        if self.check_next_token("="):
+            self.accept_token()
+            self.value()
+            self.list()
+        else:
+            pass
+        
+        
+    def function()       
+            
+            
+        
         
         
                 
