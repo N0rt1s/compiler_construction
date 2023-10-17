@@ -121,6 +121,7 @@ class cfg:
         else:
             raise ("Exception")
 
+
     def is_params(self):
         if self.check_next_token(")"):
             self.accept_token()
@@ -309,13 +310,236 @@ class cfg:
     def conditions(self):
         if self.check_next_token_by_class("Id"):
             self.accept_token()
-            
+            self.Econdition()
+        elif self.check_next_token("true") or self.check_next_token("false"):
+            self.accept_token()
+            self.Econdition()
+        elif :
         self.value()
         self.CO()
         self.value()
         self.Econdition()
         
+    def Econdition(self):
+        if self.check_next_token(")"):
+            self.accept_token()
+            pass
+        else:
+             self.lop()
+             self.conditions()
+             
+    def lop(self):
+        if self.check_next_token("and"):
+            self.accept_token()
+        elif self.check_next_token("or"):
+            self.accept_token()
+        else:
+            raise("Exception")
+    def elif_stat(self):
+        if self.check_next_token("elif"):
+            self.accept_token()
+            if self.check_next_token("("):
+                self.accept_token()
+                self.condition()
+                if self.check_next_token(")"):
+                    self.accept_token()
+                    if self.check_next_token("{"):
+                      self.accept_token()
+                      self.MST()
+                      if self.check_next_token("}"):
+                          self.accept_token()
+                          self.elif_stat()
+                      else:
+                          raise("Exception")
+                    else:
+                         raise("Exception")
+                else:
+                         raise("Exception")
+            else:
+                         raise("Exception")
+        else:
+                         pass        
+    def else_stat(self):
+        if self.check_next_token("else"):
+            self.accept_token()
+            if self.check_next_token("{"):
+             self.accept_token()
+             self.MST()
+             if self.check_next_token("}"):
+                self.accept_token()
+             else:
+                raise("Exception")
+            elif self.check_next_token("if"):
+                       self.if_stat()
+            else:
+                raise("Exception")
+            
+        else:
+            pass
         
+    def for_loop(self):
+        if self.check_next_token("for"):
+            self.accept_token()
+            if self.check_next_token("("):
+                self.accept_token()
+                self.part1()
+                self.value()
+                self.CO()
+                self.value()
+                if self.check_next_token(";"):
+                    self.accept_token()
+                    if self.check_next_token_by_class("Id"):
+                        self.accept_token()
+                        self.inc_dec()
+                        if self.check_next_token(")"):
+                            self.accept_token()
+                            if self.check_next_token("{"):
+                                self.accept_token()
+                                self.MST()
+                                if self.check_next_token("}"):
+                                    self.accept_token()
+                                else:
+                                    raise("Exception")
+                            else:
+                                    raise("Exception")
+                        else:
+                                    raise("Exception")
+                    else:
+                                    raise("Exception")
+                else:
+                                    raise("Exception")
+            else:
+                                    raise("Exception")
+       # else:
+                                    raise("Exception")
+    def part1(self):
+        self.dec()
+    
+    def while_loop(self):
+        if self.check_next_token("while"):
+            self.accept_token()
+            if self.check_next_token("("):
+                self.accept_token()
+                self.conditions()
+                if self.check_next_token(")"):
+                    self.accept_token()
+                    if self.check_next_token("{"):
+                        self.accept_token()
+                        self.MST()
+                        if self.check_next_token("}"):
+                            self.accept_token()
+                        else:
+                                    raise("Exception")
+                    else:
+                                    raise("Exception")
+                else:
+                                    raise("Exception")
+            else:
+                                    raise("Exception")
+        #else:
+                                    raise("Exception")
+    def for_each_loop(self):
+        if self.check_next_token("forEach"):
+            self.accept_token()
+            if self.check_next_token("("):
+                self.accept_token()
+                if self.check_next_token_by_class("Id"):
+                    self.accept_token()
+                    if self.check_next_token("in"):
+                        self.accept_token()                    
+                        if self.check_next_token_by_class("Id"):
+                               self.accept_token()
+                               if self.check_next_token(")"):
+                                  self.accept_token()
+                                  if self.check_next_token("{"):
+                                   self.accept_token()
+                                   self.MST()
+                                   if self.check_next_token("}"):
+                                    self.accept_token()
+                                   else:
+                                        raise("Exception")
+                                  else:
+                                        raise("Exception")
+                               else:
+                                    raise("Exception")
+                        else:
+                                    raise("Exception")
+                    else:
+                                    raise("Exception")
+                else:
+                                    raise("Exception")
+            else:
+                                    raise("Exception")
+        #else:
+                                    raise("Exception")
+    def is_array(self):
+        if self.check_next_token("["):
+                self.accept_token()
+                if self.check_next_token("]"):
+                    self.accept_token()
+                else:
+                                    raise("Exception")
+        else:
+            pass
+    
+    def value(self):
+        if self.check_next_token_by_class("Id"):
+            self.vp()
+        else:
+            self.const()
+    def bool(self):
+        if self.check_next_token("true"):
+            self.accept_token()
+        elif self.check_next_token("false"):
+                self.accept_token()
+    def Inc_dec(self):
+        if self.check_next_token("++"):
+            self.accept_token()
+        elif self.check_next_token("--"):
+                self.accept_token()
+                
+    def CO(self):
+        if self.check_next_token(">"):
+            self.accept_token()
+        elif self.check_next_token("<"):
+                self.accept_token()
+        elif self.check_next_token("<="):
+                self.accept_token()
+        elif self.check_next_token(">="):
+                self.accept_token()
+        elif self.check_next_token("=="):
+                self.accept_token()
+        elif self.check_next_token("!="):
+                self.accept_token()
+    
+    def jump_stat(self):
+        if self.check_next_token("break"):
+            self.accept_token()
+            if self.check_next_token(";"):
+                self.accept_token()
+        elif self.check_next_token("continue"):
+            self.accept_token()
+            if self.check_next_token(";"):
+                self.accept_token()
+    
+                
+
+            
+    
+    
+        
+        
+               
+             
+            
+        
+
+        
+        
+        
+    
+        
+            
                         
         
             
