@@ -93,10 +93,19 @@
 
 ##<for_loop> --> for ( <Part1> <value> <CO> <value> ; Id <Inc_dec> ){ <MST> }
 
-
 #<Part1> --> <Dec>
-
-
 
 ##<While_loop> --> while ( <conditions> ){ <MST> }
 ##<for_each_loop> --> forEach ( Id in Id ){ <MST> }
+
+#<exp> --> <AE> <OE>
+#<OE> --> or <AE> <OE> | null
+#<AE> --> <RE> <AE1>
+#<AE1> --> and <RE> <AE1> | null
+#<RE> --> <E> <RE1> | null
+#<RE1> --> RO <E> <RE1> | null
+#<E> --> <T> <E1>
+#<E1> --> PM <T> <E1> | null
+#<T> --> <F> <T1>
+#<T1> --> MDM <value> <T1> | null
+

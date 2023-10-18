@@ -2,4 +2,6 @@
 
 public class aa{
     aa( ) { }
+    private char ml;
+    public number as( ) { }
 }

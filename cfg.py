@@ -30,7 +30,7 @@ class cfg:
             else:
                 raise ("Exception")
         else:
-            pass
+            raise ("Exception")
 
     def S_or_M(self):
         if self.check_next_token_by_class("Id"):
@@ -643,7 +643,15 @@ class cfg:
             self.list()
             
     def MST(self):
-        if self.check_next_token("if"):
+        if self.check_next_token_by_class("DataType"):
+            self.accept_token()
+            if self.check_next_token_by_class("Id"):
+                self.accept_token()
+                self.list()
+                self.MST()
+            else:
+                raise("Exception")
+        elif self.check_next_token("if"):
             self.if_stat()
             self.MST()
         elif self.check_next_token("for_loop"):
@@ -663,14 +671,7 @@ class cfg:
             self.func_call_Id_set_class_init()
             self.MST()
         else:
-            self.acces_specifiers()
-            self.dt()
-            if self.check_next_token_by_class("Id"):
-             self.accept_token()
-             self.Dec_Var_func()
-             self.MST()
-            else:
-                raise("Exception")
+            pass
         
     def dts(self):
         if self.check_next_token_by_class("number"):
