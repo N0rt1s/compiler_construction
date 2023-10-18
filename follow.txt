@@ -1,0 +1,68 @@
+Follow(Start) = {$}
+
+Follow(importing_modules) = {public | private}
+
+Follow(S_or_M) = {public | private}
+
+Follow(mutiple_Id) = { } }
+
+Follow(rest) = {$}
+
+Follow(more_classes) = {$}
+
+Follow(dt) = {Id,Follow(dt_or_Id)}
+
+Follow(dts) = {[}
+
+Follow(is_array) = {Id,Follow(dt_or_Id)} 
+
+Follow(value) = {MDM}
+
+Follow(const) = {MDM}
+
+Follow(arrConst) = {MDM}
+
+Follow(Inc_dec) = { ) | Follow(func_call_Id_set_class_init)}
+
+Follow(index) = { ] }
+
+Follow(OP) = { Follow(OP_Id_loop) | Follow(OP_Id_loop1) }
+
+Follow(OP_more_Id) = { Follow(OP) }
+
+Follow(OP_ex_Id) = { Follow(OP_more_Id) }
+
+Follow(OP_Id_loop) = { Follow(OP_ex_Id) }
+
+Follow(OP_Id_loop1) = { Follow(OP_ex_Id) | Follow(OP_Id_loop)}
+
+Follow(VP) = { Follow(VP_Id_loop) | Follow(VP_Id_loop1) }
+
+Follow(VP_more_Id) = { Follow(VP) }
+
+Follow(VP_ex_Id) = { Follow(VP_more_Id) }
+
+Follow(VP_Id_loop) = { Follow(VP_ex_Id) }
+
+Follow(VP_Id_loop1) = { Follow(VP_ex_Id) | Follow(VP_Id_loop)}
+
+Follow(acces_specifiers) = {class | Follow(dt)}
+
+Follow(jump_stat) = { public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+
+Follow(CST) = { } }
+
+Follow(MST) = { } }
+
+Follow(Dec_Var_func) = { } }
+
+Follow(func_call_Id_set_class_init) = { ; }
+
+Follow(class_init_or_not) = { ; }
+
+Follow(func_call_Id_set) = { ; }
+
+Follow(Dec) = { Follow(Part1) | } }
+Follow(func_call_Id_set) = { ; }
+Follow(func_call_Id_set) = { ; }
+
