@@ -10,11 +10,11 @@ Follow(rest) = {$}
 
 Follow(more_classes) = {$}
 
-Follow(dt) = {Id,Follow(dt_or_Id)}
+Follow(dt) = {Id}
 
 Follow(dts) = {[}
 
-Follow(is_array) = {Id,Follow(dt_or_Id)} 
+Follow(is_array) = {Id} 
 
 Follow(value) = {MDM}
 
@@ -63,6 +63,44 @@ Follow(class_init_or_not) = { ; }
 Follow(func_call_Id_set) = { ; }
 
 Follow(Dec) = { Follow(Part1) | } }
-Follow(func_call_Id_set) = { ; }
-Follow(func_call_Id_set) = { ; }
 
+Follow(List) = { ; | } | = }
+
+Follow(put_value) = { ; | } | = }
+
+Follow(is_params) = { ) }
+
+Follow(parameters) = { )  }
+
+Follow(dt_or_Id) = { Id }
+
+
+Follow(more_param) = { )  }
+
+Follow(return_dec) = {public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+
+Follow(class_dec) = {class | $}
+
+Follow(derived) = { { }
+
+Follow(constructor) = {public | private}
+
+Follow(struct) = {public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+
+Follow(is_param_value) = { ) }
+
+Follow(param_values) = { ) }
+
+Follow(more_value_param) = { ) }
+
+Follow(if_stat) = {public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+
+Follow(elif_stat) = {public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+
+Follow(else_stat) = {else | public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+
+Follow(While_loop) = { public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+
+Follow(for_each_loop) = { public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
+
+Follow(Part1) = {Id|const}

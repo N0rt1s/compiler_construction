@@ -36,11 +36,11 @@
 
 	FIRST<VP_Id_loop> = {.|null}
 
-	FIRST<acces_specifiers> = { public | private | null}
+	FIRST<acces_specifiers> = { public | private}
 
 	FIRST<jump_stat> = {break|continue}
 
-	FIRST<CST> = FIRST<access_specifiers>= {public | private | null}
+	FIRST<CST> = FIRST<access_specifiers>= {public | private}
 	
 	FIRST<MST>={public|private|number| char| string| bool|struct|if|for|forEach|while|id|break|continue}
 	
@@ -107,3 +107,15 @@
 	FIRST <conditions>=FIRST<value>={const,id}
 
 	FIRST <Econdition>=FIRST<LOP>={and,or,null}
+
+	FIRST <exp>=FIRST<AE>={Id|const}
+	FIRST <OE>={or,null}
+	FIRST <AE>=FIRST<RE>={Id|const}
+	FIRST <AE1>={and,null}
+	FIRST <RE>=FIRST<E>={Id|const}
+	FIRST <RE1>={RO,null}
+	FIRST <E>=FIRST<T>={Id|const}
+	FIRST <E1>={+,-,null}
+	FIRST <T>=FIRST<value>={Id|const}	
+	FIRST <T1>={*,/,%,null}
+

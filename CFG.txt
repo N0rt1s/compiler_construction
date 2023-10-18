@@ -38,7 +38,7 @@
 ##<jump_stat> --> break; | continue; 
 ##<CST> --> <acces_specifiers> <dt> Id <Dec_Var_func> <CST> | null
 
-#<MST> --> <Dec> <MST>| <struct> <MST>| <if_stat> <MST>| <for> <MST>| <for_each> <MST>| #<While> <MST>| Id <func_call_Id_set_class_init> ; <MST> | <jump_stat> <MST> | <return_dec> <MST> | null
+#<MST> --> <Dec> <MST>| <for_loop> <MST> |  | <struct> <MST>| <if_stat> <MST>| <for_each_loop> <MST>| #<While_loop> <MST>| Id <func_call_Id_set_class_init> ; <MST> | <jump_stat> <MST> | <return_dec> <MST> | null
 
 ##<Dec_Var_func> --> <List> | ( <is_params> ) { <MST> }
 
@@ -78,7 +78,7 @@
 ##<if_stat> --> if ( <exp> ) { <MST> } <elif_stat> <else_stat>
 
 ##<elif_stat> --> elif ( <conditions> ) { <MST> } <elif_stat> || null
-##<else_stat> -->  else{ <MST> } | <if_stat>
+##<else_stat> -->  else{ <MST> } 
 
 ##<for_loop> --> for ( <Part1> <exp> ; Id <Inc_dec> ){ <MST> }
 
@@ -95,6 +95,6 @@
 #<RE1> --> RO <E> <RE1> | null
 #<E> --> <T> <E1>
 #<E1> --> PM <T> <E1> | null
-#<T> --> <F> <T1>
+#<T> --> <value> <T1>
 #<T1> --> MDM <value> <T1> | null
 
