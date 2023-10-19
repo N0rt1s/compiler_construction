@@ -3,5 +3,9 @@
 public class aa{
     aa( ) { }
     private char ml;
-    public number as( ) { }
+    public number as( ) { 
+        number asd=23;
+        asd=ml;
+        
+     }
 }

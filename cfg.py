@@ -14,7 +14,7 @@ class cfg:
 
     def accept_token(self):
         self.token_index += 1
-        if self.token_index > (len(self.allTokens)-1):
+        if self.token_index > (len(self.allTokens) - 1):
             self.token_index = -1
 
     def start(self):
@@ -111,7 +111,7 @@ class cfg:
                     self.accept_token()
                     if self.check_next_token("{"):
                         self.accept_token()
-                        self.mst()
+                        self.MST()
                         if self.check_next_token("}"):
                             self.accept_token()
                         else:
@@ -124,9 +124,6 @@ class cfg:
                 raise ("Exception")
         else:
             raise ("Exception")
-
-    def mst(self):
-        pass
 
     def is_params(self):
         if self.check_next_token(")"):
@@ -191,20 +188,16 @@ class cfg:
             self.accept_token()
             if self.check_next_token_by_class("Id"):
                 self.accept_token()
-                self.put_value()
                 self.list()
             else:
                 raise ("Exception")
-        elif self.check_next_token(";"):
-            self.accept_token()
         else:
-            raise ("Exception")
+            pass
 
     def put_value(self):
         if self.check_next_token("="):
             self.accept_token()
             self.value()
-            self.list()
         else:
             pass
 
@@ -221,7 +214,6 @@ class cfg:
                     if self.check_next_token("{"):
                         self.accept_token()
                         self.MST()
-                        self.return_dec()
                         if self.check_next_token("}"):
                             self.accept_token()
                         else:
@@ -289,20 +281,16 @@ class cfg:
             raise ("Exception")
 
     def if_stat(self):
-        if self.check_next_token("if"):
+        if self.check_next_token("("):
             self.accept_token()
-            if self.check_next_token("("):
+            self.condition()
+            if self.check_next_token(")"):
                 self.accept_token()
-                self.condition()
-                if self.check_next_token(")"):
+                if self.check_next_token("{"):
                     self.accept_token()
-                    if self.check_next_token("{"):
+                    self.MST()
+                    if self.check_next_token("}"):
                         self.accept_token()
-                        self.MST()
-                        if self.check_next_token("}"):
-                            self.accept_token()
-                        else:
-                            raise ("Exception")
                     else:
                         raise ("Exception")
                 else:
@@ -329,7 +317,7 @@ class cfg:
         elif self.check_next_token_by_class("Id"):
             self.VP_more_Id()
         else:
-            raise("Exception")
+            raise ("Exception")
 
     def Econdition(self):
         if self.check_next_token(")"):
@@ -382,8 +370,6 @@ class cfg:
                     self.accept_token()
                 else:
                     raise ("Exception")
-            elif self.check_next_token("if"):
-                self.if_stat()
             else:
                 raise ("Exception")
 
@@ -391,28 +377,24 @@ class cfg:
             pass
 
     def for_loop(self):
-        if self.check_next_token("for"):
+        if self.check_next_token("("):
             self.accept_token()
-            if self.check_next_token("("):
+            self.Dec()
+            self.value()
+            self.CO()
+            self.value()
+            if self.check_next_token(";"):
                 self.accept_token()
-                self.part1()
-                self.value()
-                self.CO()
-                self.value()
-                if self.check_next_token(";"):
+                if self.check_next_token_by_class("Id"):
                     self.accept_token()
-                    if self.check_next_token_by_class("Id"):
+                    self.inc_dec()
+                    if self.check_next_token(")"):
                         self.accept_token()
-                        self.inc_dec()
-                        if self.check_next_token(")"):
+                        if self.check_next_token("{"):
                             self.accept_token()
-                            if self.check_next_token("{"):
+                            self.MST()
+                            if self.check_next_token("}"):
                                 self.accept_token()
-                                self.MST()
-                                if self.check_next_token("}"):
-                                    self.accept_token()
-                                else:
-                                    raise ("Exception")
                             else:
                                 raise ("Exception")
                         else:
@@ -423,11 +405,11 @@ class cfg:
                     raise ("Exception")
             else:
                 raise ("Exception")
-                # else:
-                raise ("Exception")
+        else:
+            raise ("Exception")
 
-    def part1(self):
-        self.dec()
+    # def part1(self):
+    #     self.dec()
 
     def while_loop(self):
         if self.check_next_token("while"):
@@ -454,25 +436,21 @@ class cfg:
                 raise ("Exception")
 
     def for_each_loop(self):
-        if self.check_next_token("forEach"):
+        if self.check_next_token("("):
             self.accept_token()
-            if self.check_next_token("("):
+            if self.check_next_token_by_class("Id"):
                 self.accept_token()
-                if self.check_next_token_by_class("Id"):
+                if self.check_next_token("in"):
                     self.accept_token()
-                    if self.check_next_token("in"):
+                    if self.check_next_token_by_class("Id"):
                         self.accept_token()
-                        if self.check_next_token_by_class("Id"):
+                        if self.check_next_token(")"):
                             self.accept_token()
-                            if self.check_next_token(")"):
+                            if self.check_next_token("{"):
                                 self.accept_token()
-                                if self.check_next_token("{"):
+                                self.MST()
+                                if self.check_next_token("}"):
                                     self.accept_token()
-                                    self.MST()
-                                    if self.check_next_token("}"):
-                                        self.accept_token()
-                                    else:
-                                        raise ("Exception")
                                 else:
                                     raise ("Exception")
                             else:
@@ -485,8 +463,8 @@ class cfg:
                     raise ("Exception")
             else:
                 raise ("Exception")
-                # else:
-                raise ("Exception")
+        else:
+            raise ("Exception")
 
     def is_array(self):
         if self.check_next_token("["):
@@ -500,7 +478,7 @@ class cfg:
 
     def value(self):
         if self.check_next_token_by_class("Id"):
-            self.vp()
+            self.VP()
         else:
             self.const()
 
@@ -539,6 +517,7 @@ class cfg:
             self.accept_token()
             if self.check_next_token(";"):
                 self.accept_token()
+
     def class_int(self):
         if self.check_next_token_by_class("Id"):
             self.accept_token()
@@ -551,47 +530,43 @@ class cfg:
                         if self.check_next_token_by_class("Id"):
                             self.accept_token()
                             if self.check_next_token("("):
-                             self.accept_token()
-                             if self.check_next_token(")"):
                                 self.accept_token()
-                                if self.check_next_token(";"):
-                                 self.accept_token()
+                                if self.check_next_token(")"):
+                                    self.accept_token()
+                                    if self.check_next_token(";"):
+                                        self.accept_token()
+                                    else:
+                                        raise ("Exception")
                                 else:
-                                        raise("Exception")
-                             else:
-                                        raise("Exception")
+                                    raise ("Exception")
                             else:
-                                        raise("Exception")
+                                raise ("Exception")
                         else:
-                                        raise("Exception")
+                            raise ("Exception")
                     else:
-                                        raise("Exception")
+                        raise ("Exception")
                 else:
-                                        raise("Exception")
+                    raise ("Exception")
             else:
-                                        raise("Exception")
-        #else:
-                                        raise("Exception")
-                        
-        
+                raise ("Exception")
+                # else:
+                raise ("Exception")
+
     def struct(self):
-        if self.check_next_token("struct"):
+        if self.check_next_token_by_class("Id"):
+            self.accept_token()
+            if self.check_next_token("{"):
                 self.accept_token()
-                if self.check_next_token_by_class("Id"):
+                self.cst()
+                if self.check_next_token("}"):
                     self.accept_token()
-                    if self.check_next_token("{"):
-                        self.accept_token()
-                        self.cst()
-                        if self.check_next_token("}"):
-                            self.accept_token()
-                        else:
-                                        raise("Exception")
-                    else:
-                                        raise("Exception")
                 else:
-                                        raise("Exception")
-       # else:
-                                        raise("Exception")
+                    raise ("Exception")
+            else:
+                raise ("Exception")
+        else:
+            raise ("Exception")
+
     def Dec_Var_func(self):
         if self.check_next_token("("):
             self.accept_token()
@@ -601,18 +576,21 @@ class cfg:
                 if self.check_next_token("{"):
                     self.accept_token()
                     self.MST()
-                    self.return_dec()
                     if self.check_next_token("}"):
                         self.accept_token()
                     else:
-                        raise("Exception")
+                        raise ("Exception")
                 else:
-                        raise("Exception")
+                    raise ("Exception")
             else:
-                        raise("Exception")
-        else:
+                raise ("Exception")
+        elif self.check_next_token(","):
             self.list()
-    
+            if self.check_next_token(";"):
+                self.accept_token()
+        elif self.check_next_token(";"):
+            self.accept_token()
+
     def func_call_Id_set(self):
         if self.check_next_token("("):
             self.accept_token()
@@ -622,57 +600,68 @@ class cfg:
                 if self.check_next_token(";"):
                     self.accept_token()
                 else:
-                        raise("Exception")
+                    raise ("Exception")
             else:
-                        raise("Exception")
+                raise ("Exception")
         else:
             if self.check_next_token("="):
+                self.accept_token()
+                self.value()
+                if self.check_next_token(";"):
                     self.accept_token()
-                    self.value()
-                    if self.check_next_token(";"):
-                        self.accept_token()
-                    else:
-                        raise("Exception")
+                else:
+                    raise ("Exception")
             else:
-                        raise("Exception")
+                raise ("Exception")
+
     def Dec(self):
-        self.acces_specifiers()
         self.dt()
         if self.check_next_token_by_class("Id"):
             self.accept_token()
             self.list()
-            
+            self.put_value()
+            if self.check_next_token(";"):
+                self.accept_token()
+            else:
+                raise ("Exception")
+        else:
+            raise ("Exception")
+
     def MST(self):
         if self.check_next_token_by_class("DataType"):
-            self.accept_token()
-            if self.check_next_token_by_class("Id"):
-                self.accept_token()
-                self.list()
-                self.MST()
-            else:
-                raise("Exception")
+            self.Dec()
+            self.MST()
         elif self.check_next_token("if"):
             self.if_stat()
             self.MST()
-        elif self.check_next_token("for_loop"):
+        elif self.check_next_token("for"):
+            self.accept_token()
             self.for_loop()
             self.MST()
-        elif self.check_next_token("for_each_loop"):
+        elif self.check_next_token("forEach"):
+            self.accept_token()
             self.for_each_loop()
             self.MST()
-        elif self.check_next_token("break;") or self.check_next_token("continue;"):
-            self.jump_stat()
-            self.MST()
+        elif self.check_next_token("break") or self.check_next_token("continue"):
+            self.accept_token()
+            if self.check_next_token(";"):
+                self.accept_token()
+                self.MST()
         elif self.check_next_token("struct"):
+            self.accept_token()
             self.struct()
             self.MST()
         elif self.check_next_token_by_class("Id"):
             self.accept_token()
             self.func_call_Id_set_class_init()
-            self.MST()
+            if self.check_next_token(";"):
+                self.accept_token()
+                self.MST()
+            else:
+                raise("Exception")    
         else:
             pass
-        
+
     def dts(self):
         if self.check_next_token_by_class("number"):
             self.accept_token()
@@ -683,7 +672,8 @@ class cfg:
         elif self.check_next_token_by_class("bool"):
             self.accept_token()
         else:
-            raise("Exception")
+            raise ("Exception")
+
     def const(self):
         if self.check_next_token_by_class("strConst"):
             self.accept_token()
@@ -696,7 +686,8 @@ class cfg:
         elif self.check_next_token_by_class("arrConst"):
             self.arrConst()
         else:
-            raise("Exception")
+            raise ("Exception")
+
     def arrConst(self):
         if self.check_next_token_by_class("strArrConst"):
             self.accept_token()
@@ -709,19 +700,30 @@ class cfg:
         elif self.check_next_token_by_class("objArrConst"):
             self.arrConst()
         else:
-            raise("Exception")
+            raise ("Exception")
+
     def index(self):
         if self.check_next_token_by_class("numConst"):
             self.accept_token()
         else:
-            raise("Exception")
+            raise ("Exception")
+
     def OP(self):
         if self.check_next_token_by_class("Id"):
             self.accept_token()
-            self.ex_Id()
+            self.OP_more_Id()
         else:
-            raise("Exception")
-    def ex_Id(self):
+            raise ("Exception")
+
+    def OP_more_Id(self):
+        if self.check_next_token("["):
+            self.OP_ex_Id()
+        elif self.check_next_token("("):
+            self.OP_ex_Id()
+        else:
+            pass
+
+    def OP_ex_Id(self):
         if self.check_next_token("["):
             self.accept_token()
             self.index()
@@ -729,7 +731,7 @@ class cfg:
                 self.accept_token()
                 self.Id_loop()
             else:
-                raise("Exception")
+                raise ("Exception")
         elif self.check_next_token("("):
             self.accept_token()
             self.is_param_value()
@@ -737,91 +739,110 @@ class cfg:
                 self.accept_token()
                 self.Id_loop()
             else:
-                raise("Exception")
-                
+                raise ("Exception")
+
+    def OP_Id_loop(self):
+        if self.check_next_token("."):
+            self.accept_token()
+            self.OP()
+        elif self.check_next_token("("):
+            self.accept_token()
+            self.is_param_value()
+            if self.check_next_token(")"):
+                self.accept_token()
+                self.Id_loop()
+            else:
+                raise ("Exception")
         else:
             pass
-    # def Id_loop(self):
-    #     if self.check_next_token("."):
-    #         self.accept_token()
-    #         self.OP()
-    #     elif self.check_next_token("("):
-    #         self.accept_token()
-    #         self.is_param_value()
-    #         if self.check_next_token(")"):
-    #             self.accept_token()
-    #             self.Id_loop()
-    #         else:
-    #             raise("Exception")
-        
-    #     elif self.check_next_token):
-    #         self.accept_token()
-    #         pass
-    # def Id_loop1(self):
-    #     if self.check_next_token("."):
-    #         self.accept_token()
-    #         self.OP()
-            
-            
-            
-            
-    def func_call_Id_set_class_init(self):
-        if self.check_next_token("Id"):
+
+    def OP_Id_loop1(self):
+        if self.check_next_token("."):
             self.accept_token()
+            self.OP()
+
+    def VP(self):
+        if self.check_next_token_by_class("Id"):
+            self.accept_token()
+            self.VP_more_Id()
         else:
-            self.ex_Id()
-            self.func_call_Id_set()
-        
-        
-        
-            
-                
-            
-            
-        
-        
-    
-       
+            raise ("Exception")
 
-        
-        
-         
-        
-                            
-                                            
+    def VP_more_Id(self):
+        if self.check_next_token("["):
+            self.VP_ex_Id()
+        else:
+            pass
 
-                
-        
-        
-            
-            
-                
+    def VP_ex_Id(self):
+        if self.check_next_token("["):
+            self.accept_token()
+            self.index()
+            if self.check_next_token("]"):
+                self.accept_token()
+                self.Id_loop()
+            else:
+                raise ("Exception")
+        elif self.check_next_token("("):
+            self.accept_token()
+            self.is_param_value()
+            if self.check_next_token(")"):
+                self.accept_token()
+                self.Id_loop()
+            else:
+                raise ("Exception")
 
-            
-    
-    
-        
-        
-               
-             
-            
-        
+    def VP_Id_loop(self):
+        if self.check_next_token("."):
+            self.accept_token()
+            self.VP()
+        elif self.check_next_token("("):
+            self.accept_token()
+            self.is_param_value()
+            if self.check_next_token(")"):
+                self.accept_token()
+                self.Id_loop()
+            else:
+                raise ("Exception")
+        else:
+            pass
 
-        
-        
-        
-    
-        
-            
-                        
-        
-            
-        
-        
-            
-        
-            
-        
-        
-        
-                
+    def VP_Id_loop1(self):
+        if self.check_next_token("."):
+            self.accept_token()
+            self.VP()
+
+    def func_call_Id_set_class_init(self):
+        if self.check_next_token("[") or self.check_next_token("("):
+            self.OP_ex_Id()
+        elif self.check_next_token("="):
+            self.accept_token()
+            self.value()
+        elif self.check_next_token_by_class("Id"):
+            self.class_init_or_not()
+        else:
+            raise("Exception")        
+
+    def class_init_or_not(self):
+        if self.check_next_token_by_class("Id"):
+            self.accept_token()
+        elif self.check_next_token("="):
+            self.accept_token()
+            if self.check_next_token("new"):
+                self.accept_token()
+                if self.check_next_token_by_class("Id"):
+                    self.accept_token()
+                    if self.check_next_token("("):
+                        self.accept_token()
+                        if self.check_next_token(")"):
+                            self.accept_token()
+                        else:
+                            raise ("Exception")
+                    else:
+                        raise ("Exception")
+                else:
+                    raise ("Exception")
+            else:
+                raise ("Exception")
+        else:
+            raise ("Exception")
