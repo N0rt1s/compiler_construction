@@ -11,11 +11,21 @@
 ##<dts> --> number | char | string | bool
 ##<is_array> --> [] | null
 
-##<value> --> <VP> | <const>
+##<value> --> <VP> | <const> | (<exp>)
 
 ##<const> --> strConst | charConst | boolConst | numConst | <arrConst>
 
-##<arrConst> --> strArrConst | charArrConst | boolArrConst | numArrConst | objArrConst
+##<arrConst> --> [ <elementlist_arraylist> ]
+
+#<elementlist_arraylist> --> <element_list> | <array_list>
+
+#<element_list> --> <value> <more_array_value>
+
+#<more_array_value> --> , <element_list> | null
+
+#<array_list> -> arrConst <more_array>
+
+#<more_array> --> , <array_list> | null
 
 ##<Inc_dec> --> ++ | -- 
 
@@ -36,7 +46,9 @@
 ##<acces_specifiers> --> public | private 
 
 ##<jump_stat> --> break; | continue; 
-##<CST> --> <acces_specifiers> <dt> Id <Dec_Var_func> <CST> | null
+##<CST> --> <acces_specifiers> <dec_or_cs> | null
+
+#<dec_or_cs> --> <struct> | <dt> Id <Dec_Var_func> <CST>
 
 #<MST> --> <Dec> <MST>| <for_loop> <MST> | <struct> <MST>| <if_stat> <MST>| <for_each_loop> <MST>| #<While_loop> <MST>| Id <func_call_Id_set_class_init> ; <MST> | <jump_stat> <MST> | <return_dec> <MST> | null
 

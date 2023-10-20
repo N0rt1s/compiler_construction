@@ -197,7 +197,7 @@ class cfg:
     def put_value(self):
         if self.check_next_token("="):
             self.accept_token()
-            self.value()
+            self.exp()
         else:
             pass
 
@@ -230,7 +230,7 @@ class cfg:
     def return_dec(self):
         if self.check_next_token("return"):
             self.accept_token()
-            self.value()
+            self.exp()
         else:
             pass
 
@@ -272,7 +272,7 @@ class cfg:
         self.OP()
         if self.check_next_token("="):
             self.accept_token()
-            self.value()
+            self.exp()
             if self.check_next_token(";"):
                 self.accept_token()
             else:
@@ -283,7 +283,7 @@ class cfg:
     def if_stat(self):
         if self.check_next_token("("):
             self.accept_token()
-            self.condition()
+            self.exp()
             if self.check_next_token(")"):
                 self.accept_token()
                 if self.check_next_token("{"):
@@ -300,33 +300,6 @@ class cfg:
         else:
             raise ("Exception")
 
-    def conditions(self):
-        if (
-            self.check_next_token_by_class("strConst")
-            or self.check_next_token_by_class("charConst")
-            or self.check_next_token_by_class("boolConst")
-            or self.check_next_token_by_class("numConst")
-        ):
-            self.accept_token()
-            self.CO()
-            self.value()
-            self.Econdition()
-        elif self.check_next_token("true") or self.check_next_token("false"):
-            self.accept_token()
-            self.Econdition()
-        elif self.check_next_token_by_class("Id"):
-            self.VP_more_Id()
-        else:
-            raise ("Exception")
-
-    def Econdition(self):
-        if self.check_next_token(")"):
-            self.accept_token()
-            pass
-        else:
-            self.lop()
-            self.conditions()
-
     def lop(self):
         if self.check_next_token("and"):
             self.accept_token()
@@ -340,7 +313,7 @@ class cfg:
             self.accept_token()
             if self.check_next_token("("):
                 self.accept_token()
-                self.condition()
+                self.exp()
                 if self.check_next_token(")"):
                     self.accept_token()
                     if self.check_next_token("{"):
@@ -380,27 +353,27 @@ class cfg:
         if self.check_next_token("("):
             self.accept_token()
             self.Dec()
-            self.value()
-            self.CO()
-            self.value()
+            self.exp()
             if self.check_next_token(";"):
                 self.accept_token()
                 if self.check_next_token_by_class("Id"):
                     self.accept_token()
-                    self.inc_dec()
-                    if self.check_next_token(")"):
+                    # self.inc_dec()
+                    if self.check_next_token("++") or self.check_next_token("--"):
                         self.accept_token()
-                        if self.check_next_token("{"):
+                        if self.check_next_token(")"):
                             self.accept_token()
-                            self.MST()
-                            if self.check_next_token("}"):
+                            if self.check_next_token("{"):
                                 self.accept_token()
+                                self.MST()
+                                if self.check_next_token("}"):
+                                    self.accept_token()
+                                else:
+                                    raise ("Exception")
                             else:
                                 raise ("Exception")
                         else:
                             raise ("Exception")
-                    else:
-                        raise ("Exception")
                 else:
                     raise ("Exception")
             else:
@@ -416,7 +389,7 @@ class cfg:
             self.accept_token()
             if self.check_next_token("("):
                 self.accept_token()
-                self.conditions()
+                self.exp()
                 if self.check_next_token(")"):
                     self.accept_token()
                     if self.check_next_token("{"):
@@ -479,6 +452,13 @@ class cfg:
     def value(self):
         if self.check_next_token_by_class("Id"):
             self.VP()
+        elif self.check_next_token("("):
+            self.accept_token()
+            self.exp()    
+            if self.check_next_token(")"):
+                self.accept_token()
+            else:
+                raise("Exception")    
         else:
             self.const()
 
@@ -606,7 +586,7 @@ class cfg:
         else:
             if self.check_next_token("="):
                 self.accept_token()
-                self.value()
+                self.exp()
                 if self.check_next_token(";"):
                     self.accept_token()
                 else:
@@ -658,7 +638,7 @@ class cfg:
                 self.accept_token()
                 self.MST()
             else:
-                raise("Exception")    
+                raise ("Exception")
         else:
             pass
 
@@ -683,10 +663,30 @@ class cfg:
             self.accept_token()
         elif self.check_next_token_by_class("numConst"):
             self.accept_token()
-        elif self.check_next_token_by_class("arrConst"):
+        elif self.check_next_token("["):
             self.arrConst()
         else:
             raise ("Exception")
+
+    def arrConst(self):
+        if self.check_next_token("["):
+            self.accept_token()
+            if self.check_next_token_by_class("strConst"):
+                self.accept_token()
+            elif self.check_next_token_by_class("charConst"):
+                self.accept_token()
+            elif self.check_next_token_by_class("boolConst"):
+                self.accept_token()
+            elif self.check_next_token_by_class("numConst"):
+                self.accept_token()
+            elif self.check_next_token_by_class("Id"):
+                self.VP()
+
+    def element_list(self):
+        if self.check_next_token("]"):
+            pass
+        else:
+            self.exp()
 
     def arrConst(self):
         if self.check_next_token_by_class("strArrConst"):
@@ -817,11 +817,13 @@ class cfg:
             self.OP_ex_Id()
         elif self.check_next_token("="):
             self.accept_token()
-            self.value()
+            self.exp()
         elif self.check_next_token_by_class("Id"):
             self.class_init_or_not()
+        elif self.check_next_token("++") or self.check_next_token("--"):
+            self.accept_token()
         else:
-            raise("Exception")        
+            raise ("Exception")
 
     def class_init_or_not(self):
         if self.check_next_token_by_class("Id"):
@@ -846,3 +848,101 @@ class cfg:
                 raise ("Exception")
         else:
             raise ("Exception")
+
+    def exp(self):
+        self.AE()
+        self.OE()
+
+    def OE(self):
+        if self.check_next_token("or"):
+            self.accept_token()
+            self.AE()
+            self.OE()
+        else:
+            pass
+
+    def AE(self):
+        self.RE()
+        self.AE1()
+
+    def AE1(self):
+        if self.check_next_token("and"):
+            self.accept_token()
+            self.RE()
+            self.AE1()
+        else:
+            pass
+
+    def RE(self):
+        if (
+            self.check_next_token_by_class("strConst")
+            or self.check_next_token_by_class("charConst")
+            or self.check_next_token_by_class("boolConst")
+            or self.check_next_token_by_class("numConst")
+        ):
+            self.accept_token()
+            self.T1()
+            self.E1()
+            self.RE1()
+        elif self.check_next_token_by_class("Id"):
+            self.VP()
+            self.T1()
+            self.E1()
+            self.RE1()
+        else:    
+            pass
+
+    def RE1(self):
+        if self.check_next_token_by_class("RelationalOperators"):
+            self.accept_token()
+            if (
+            self.check_next_token_by_class("strConst")
+            or self.check_next_token_by_class("charConst")
+            or self.check_next_token_by_class("boolConst")
+            or self.check_next_token_by_class("numConst")
+        ):
+                self.accept_token()
+                self.T1()
+                self.E1()
+                self.RE1()
+            elif self.check_next_token_by_class("Id"):
+                self.VP()
+                self.T1()
+                self.E1()
+                self.RE1()
+            else:
+                raise("Exception")    
+        else:
+            pass                
+
+    def E1(self):
+        if self.check_next_token("+"):
+            self.accept_token()
+            self.value()
+            self.T1()
+            self.E1()
+        elif self.check_next_token("-"):
+            self.accept_token()
+            self.value()
+            self.T1()
+            self.E1()
+        else:
+            pass
+
+    def T1(self):
+        if self.check_next_token("*"):
+            self.accept_token()
+            self.value()
+            self.T1()
+        elif self.check_next_token("/"):
+            self.accept_token()
+            self.value()
+            self.T1()
+        elif self.check_next_token("%"):
+            self.accept_token()
+            self.value()
+            self.T1()
+        else:
+            pass
+    
+           
