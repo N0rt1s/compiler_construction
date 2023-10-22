@@ -4,9 +4,9 @@ public class aa{
     aa( ) { }
     private char ml;
     public number as( ) { 
-        number asd= aas + 12 - 78 < llls + 121;
-        for(number i= 30+32 ; 232<12;i++){
+        number asd= (aas + 12 - 78) < (llls + 121);
+        ?*for(number i= 30+32 ; 232<12;i++){
             asd++;
-        }
+        }*?
      }
 }

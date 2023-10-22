@@ -6,22 +6,22 @@ class tokenization:
         self.patterns = [
             (r"#", "importer"),
             (
-                r"\b(for|public|private|static|class|function|struct|new|return|break|continue|if|else|while|for|forEach|switch|case|import)\b",
+                r"\b(for|public|private|static|class|function|struct|new|return|break|continue|if|else|while|for|forEach|in|switch|case|import)\b",
                 "KeyWord",
             ),
-            (r"\b(number[]|char[]|bool[]|string[])\b", "ArrayDataType"),
+            (r"\s*(number\[\]|char\[\]|bool\[\]|string\[\])\s*", "ArrayDataType"),
             (r"\b(number|char|bool|string)\b", "DataType"),
             (r"[0-9]+", "numConst"),
             (r"'(?:\\.|[^\\'])'", "chrConst"),
             (r'^"[^"]*"$', "strConst"),
             (r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", "Id"),
-            (r"[(){};]", "Punctuators"),
+            (r"[\[\],(){};]", "Punctuators"),
             (r"==|!=|<=|>=|<|>", "RelationalOperators"),
             (r"\+\+|--", "IncDecOperator"),
             (r"[+\-=/*%]", "Operator"),
             (r"\s+", None),  # Ignore whitespace
-            (r"\/\/[^\n]*", None),  # Ignore single-line comments
-            (r"\/\*[\s\S]*?\*\/", None),  # Ignore multi-line comments
+            (r"\?\?[^\n]*", None),  # Ignore single-line comments
+            (r"\?\*[\s\S]*?\*\?", None),  # Ignore multi-line comments
         ]
 
     def makeTokens(self,code):

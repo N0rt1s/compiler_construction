@@ -197,7 +197,23 @@ class cfg:
     def put_value(self):
         if self.check_next_token("="):
             self.accept_token()
-            self.exp()
+            if self.check_next_token("["):
+                self.arrConst()
+                # if self.check_next_token("]"):
+                #     self.accept_token()
+                # else:
+                #     raise("Exception")
+            elif (
+                self.check_next_token_by_class("strConst")
+                or self.check_next_token_by_class("charConst")
+                or self.check_next_token_by_class("boolConst")
+                or self.check_next_token_by_class("numConst")
+                or self.check_next_token_by_class("Id")
+                or self.check_next_token("(")
+            ):
+                self.exp()
+            else:
+                raise ("Exception")
         else:
             pass
 
@@ -381,6 +397,8 @@ class cfg:
         else:
             raise ("Exception")
 
+
+
     # def part1(self):
     #     self.dec()
 
@@ -454,11 +472,11 @@ class cfg:
             self.VP()
         elif self.check_next_token("("):
             self.accept_token()
-            self.exp()    
+            self.exp()
             if self.check_next_token(")"):
                 self.accept_token()
             else:
-                raise("Exception")    
+                raise ("Exception")
         else:
             self.const()
 
@@ -655,6 +673,7 @@ class cfg:
             raise ("Exception")
 
     def const(self):
+        
         if self.check_next_token_by_class("strConst"):
             self.accept_token()
         elif self.check_next_token_by_class("charConst"):
@@ -663,44 +682,72 @@ class cfg:
             self.accept_token()
         elif self.check_next_token_by_class("numConst"):
             self.accept_token()
-        elif self.check_next_token("["):
-            self.arrConst()
+        # elif self.check_next_token("["):
+        #     self.arrConst()
         else:
             raise ("Exception")
 
     def arrConst(self):
         if self.check_next_token("["):
             self.accept_token()
-            if self.check_next_token_by_class("strConst"):
-                self.accept_token()
-            elif self.check_next_token_by_class("charConst"):
-                self.accept_token()
-            elif self.check_next_token_by_class("boolConst"):
-                self.accept_token()
-            elif self.check_next_token_by_class("numConst"):
-                self.accept_token()
-            elif self.check_next_token_by_class("Id"):
-                self.VP()
-
-    def element_list(self):
-        if self.check_next_token("]"):
-            pass
-        else:
-            self.exp()
-
-    def arrConst(self):
-        if self.check_next_token_by_class("strArrConst"):
-            self.accept_token()
-        elif self.check_next_token_by_class("charArrConst"):
-            self.accept_token()
-        elif self.check_next_token_by_class("boolArrConst"):
-            self.accept_token()
-        elif self.check_next_token_by_class("numArrConst"):
-            self.accept_token()
-        elif self.check_next_token_by_class("objArrConst"):
-            self.arrConst()
+            if (
+                self.check_next_token_by_class("strConst")
+                or self.check_next_token_by_class("charConst")
+                or self.check_next_token_by_class("boolConst")
+                or self.check_next_token_by_class("numConst")
+                or self.check_next_token_by_class("Id")
+            ):
+                self.element_list()
+                if self.check_next_token("]"):
+                    self.accept_token()
+                else:
+                    raise("Exception")    
+            elif self.check_next_token("["):
+                self.arr_list()
+                if self.check_next_token("]"):
+                    self.accept_token()
+                else:
+                    raise("Exception")    
+            else:
+                pass
         else:
             raise ("Exception")
+
+    def element_list(self):
+        self.exp()
+        self.more_array_value()
+
+    def arr_list(self):
+        self.arrConst()
+        self.more_array()
+
+    def more_array(self):
+        if self.check_next_token(","):
+            self.accept_token()
+            self.arr_list()
+        else:
+            pass
+
+    def more_array_value(self):
+        if self.check_next_token(","):
+            self.accept_token()
+            self.element_list()
+        else:
+            pass
+
+    # def arrConst(self):
+    #     if self.check_next_token_by_class("strArrConst"):
+    #         self.accept_token()
+    #     elif self.check_next_token_by_class("charArrConst"):
+    #         self.accept_token()
+    #     elif self.check_next_token_by_class("boolArrConst"):
+    #         self.accept_token()
+    #     elif self.check_next_token_by_class("numArrConst"):
+    #         self.accept_token()
+    #     elif self.check_next_token_by_class("objArrConst"):
+    #         self.arrConst()
+    #     else:
+    #         raise ("Exception")
 
     def index(self):
         if self.check_next_token_by_class("numConst"):
@@ -874,46 +921,70 @@ class cfg:
             pass
 
     def RE(self):
+        # if (
+        #     self.check_next_token_by_class("strConst")
+        #     or self.check_next_token_by_class("charConst")
+        #     or self.check_next_token_by_class("boolConst")
+        #     or self.check_next_token_by_class("numConst")
+        # ):
+        #     self.accept_token()
+        #     self.T1()
+        #     self.E1()
+        #     self.RE1()
+        # elif self.check_next_token_by_class("Id"):
+        #     self.VP()
+        #     self.T1()
+        #     self.E1()
+        #     self.RE1()
         if (
             self.check_next_token_by_class("strConst")
             or self.check_next_token_by_class("charConst")
             or self.check_next_token_by_class("boolConst")
             or self.check_next_token_by_class("numConst")
+            or self.check_next_token_by_class("Id")
+            or self.check_next_token("(")
         ):
-            self.accept_token()
+            self.value()
             self.T1()
             self.E1()
             self.RE1()
-        elif self.check_next_token_by_class("Id"):
-            self.VP()
-            self.T1()
-            self.E1()
-            self.RE1()
-        else:    
+        else:
             pass
 
     def RE1(self):
         if self.check_next_token_by_class("RelationalOperators"):
             self.accept_token()
+            # if (
+            #     self.check_next_token_by_class("strConst")
+            #     or self.check_next_token_by_class("charConst")
+            #     or self.check_next_token_by_class("boolConst")
+            #     or self.check_next_token_by_class("numConst")
+            # ):
+            #     self.accept_token()
+            #     self.T1()
+            #     self.E1()
+            #     self.RE1()
+            # elif self.check_next_token_by_class("Id"):
+            #     self.VP()
+            #     self.T1()
+            #     self.E1()
+            #     self.RE1()
             if (
             self.check_next_token_by_class("strConst")
             or self.check_next_token_by_class("charConst")
             or self.check_next_token_by_class("boolConst")
             or self.check_next_token_by_class("numConst")
-        ):
-                self.accept_token()
-                self.T1()
-                self.E1()
-                self.RE1()
-            elif self.check_next_token_by_class("Id"):
-                self.VP()
+            or self.check_next_token_by_class("Id")
+            or self.check_next_token("(")
+            ):
+                self.value()
                 self.T1()
                 self.E1()
                 self.RE1()
             else:
-                raise("Exception")    
+                raise ("Exception")
         else:
-            pass                
+            pass
 
     def E1(self):
         if self.check_next_token("+"):
@@ -944,5 +1015,3 @@ class cfg:
             self.T1()
         else:
             pass
-    
-           
