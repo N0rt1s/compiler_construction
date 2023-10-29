@@ -8,8 +8,10 @@ class cfg:
         self.scope = 0
         self.am = ""
         self.Id = ""
-        self.dt = ""
+        self.type = ""
         self.cp = ""
+        self.parent = ""
+        self.ref=""
 
     def check_next_token_by_class(self, expected_value):
         return self.allTokens[self.token_index]["class"] == expected_value
@@ -19,12 +21,40 @@ class cfg:
 
     def insert_st(self):
         existing_object = list(filter(lambda x: x["id"] == self.Id, self.symbol_table))
-        if len(existing_object) == 0 and existing_object[0]["scope"] != self.scope:
-            self.symbol_table.append(
-                {"id": self.Id, "dataType": self.dt, "scope": self.scope}
-            )
+        if len(existing_object) != 0:
+            if existing_object[0]["scope"] != self.scope:
+                self.symbol_table.append(
+                    {"id": self.Id, "dataType": self.type, "scope": self.scope}
+                )
+            else:
+                raise CustomError(f"The variable {self.Id} already exists.")
         else:
-            raise CustomError(f"The variable {self.Id} already exists.")
+            self.symbol_table.append(
+                {"id": self.Id, "dataType": self.type, "scope": self.scope}
+            )
+
+    def insert_dt(self):
+        existing_object = list(filter(lambda x: x["id"] == self.Id, self.definition_table))
+        if len(existing_object) != 0:
+            raise CustomError(f"The Construct {self.Id} already exists.")
+        else:
+            self.definition_table.append(
+                {"id": self.Id, "type": self.type, "am": self.am, "parent": self.parent}
+            )
+
+    def insert_mt(self):
+        existing_object = list(filter(lambda x: x["id"] == self.Id, self.member_table))
+        if len(existing_object) != 0:
+            if existing_object[0]["ref"] != self.ref:
+                self.member_table.append(
+                {"id": self.Id, "type": self.type, "am": self.am, "ref": self.ref}
+            )
+            else:
+                raise CustomError(f"The Construct {self.Id} already exists.")
+        else:
+            self.member_table.append(
+                {"id": self.Id, "type": self.type, "am": self.am, "parent": self.parent}
+            )
 
     def accept_token(self):
         self.token_index += 1
@@ -75,7 +105,7 @@ class cfg:
             pass
 
     def rest(self):
-        self.class_dec()
+        self.class_struct_dec()
         self.more_classes()
 
     def more_classes(self):
@@ -84,14 +114,17 @@ class cfg:
         else:
             print("Parsing Complete")
 
-    def class_dec(self):
+    def class_struct_dec(self):
         self.acces_specifiers()
         if self.check_next_token("class"):
+            self.type = "class"
             self.accept_token()
             if self.check_next_token_by_class("Id"):
+                self.Id = self.allTokens[self.token_index]["value"]
                 self.accept_token()
                 self.derived()
                 if self.check_next_token("{"):
+                    self.ref=self.Id
                     self.accept_token()
                     self.constructor()
                     self.cst()
@@ -103,6 +136,10 @@ class cfg:
                     raise ("Exeption")
             else:
                 raise ("Exeption")
+        elif self.check_next_token("struct"):
+            self.type = "struct"
+            self.accept_token()
+            self.struct()    
         else:
             raise ("Exeption")
 
@@ -110,10 +147,14 @@ class cfg:
         if self.check_next_token(":"):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
+                self.parent = self.allTokens[self.token_index]["value"]
+                self.insert_dt()
                 self.accept_token()
             else:
                 raise ("Exeption")
         else:
+            self.parent = "-"
+            self.insert_dt()
             pass
 
     def constructor(self):
@@ -177,6 +218,7 @@ class cfg:
         else:
             self.acces_specifiers()
             if self.check_next_token("struct"):
+                self.type="struct"
                 self.accept_token()
                 self.struct()
                 self.cst()
@@ -189,25 +231,47 @@ class cfg:
                 else:
                     raise ("Exception")
 
+    def sst(self):
+        if self.check_next_token("}"):
+            # self.accept_token()
+            pass
+        else:
+            self.acces_specifiers()
+            self.dt()
+            if self.check_next_token_by_class("Id"):
+                self.Id = self.allTokens[self.token_index]["value"]
+                self.accept_token()
+                self.Dec_Var_func()
+                self.sst()
+            else:
+                raise ("Exception")
+
     def acces_specifiers(self):
         if self.check_next_token("public"):
+            self.am = "public"
             self.accept_token()
         elif self.check_next_token("private"):
+            self.am = "private"
             self.accept_token()
         else:
             pass
 
     def dt(self):
         if self.check_next_token_by_class("DataType"):
+            self.type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("ArrayDataType"):
+            self.type = self.allTokens[self.token_index]["value"]
             self.accept_token()
-        self.dt = self.allTokens[self.token_index]["value"]
+        else:
+            raise ("Exeption")
 
     def list(self):
         if self.check_next_token(","):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
+                self.Id = self.allTokens[self.token_index]["value"]
+                self.insert_st()
                 self.accept_token()
                 self.list()
             else:
@@ -238,31 +302,32 @@ class cfg:
         else:
             pass
 
-    def function(self):
-        self.acces_specifiers()
-        self.dt()
-        if self.check_next_token_by_class("Id"):
-            self.accept_token()
-            if self.check_next_token("("):
-                self.accept_token()
-                self.is_params()
-                if self.check_next_token(")"):
-                    self.accept_token()
-                    if self.check_next_token("{"):
-                        self.accept_token()
-                        self.MST()
-                        if self.check_next_token("}"):
-                            self.accept_token()
-                        else:
-                            raise ("Exception")
-                    else:
-                        raise ("Exception")
-                else:
-                    raise ("Exception")
-            else:
-                raise ("Exception")
-        else:
-            raise ("Exception")
+    # def function(self):
+    #     self.acces_specifiers()
+    #     self.dt()
+    #     if self.check_next_token_by_class("Id"):
+    #         self.accept_token()
+    #         if self.check_next_token("("):
+    #             self.accept_token()
+    #             self.is_params()
+    #             if self.check_next_token(")"):
+    #                 self.accept_token()
+    #                 if self.check_next_token("{"):
+    #                     self.scope+=1
+    #                     self.accept_token()
+    #                     self.MST()
+    #                     if self.check_next_token("}"):
+    #                         self.accept_token()
+    #                     else:
+    #                         raise ("Exception")
+    #                 else:
+    #                     raise ("Exception")
+    #             else:
+    #                 raise ("Exception")
+    #         else:
+    #             raise ("Exception")
+    #     else:
+    #         raise ("Exception")
 
     def return_dec(self):
         if self.check_next_token("return"):
@@ -571,10 +636,14 @@ class cfg:
 
     def struct(self):
         if self.check_next_token_by_class("Id"):
+            self.Id = self.allTokens[self.token_index]["value"]
             self.accept_token()
             if self.check_next_token("{"):
+                self.ref=self.Id
+                self.parent="-"
+                self.insert_dt()
                 self.accept_token()
-                self.cst()
+                self.sst()
                 if self.check_next_token("}"):
                     self.accept_token()
                 else:
@@ -590,7 +659,9 @@ class cfg:
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
+                self.insert_mt()
                 if self.check_next_token("{"):
+                    self.scope += 1
                     self.accept_token()
                     self.MST()
                     if self.check_next_token("}"):
@@ -601,11 +672,12 @@ class cfg:
                     raise ("Exception")
             else:
                 raise ("Exception")
-        elif self.check_next_token(","):
-            self.list()
-            if self.check_next_token(";"):
-                self.accept_token()
+        # elif self.check_next_token(","):
+        #     self.list()
+        #     if self.check_next_token(";"):
+        #         self.accept_token()
         elif self.check_next_token(";"):
+            self.insert_mt()
             self.accept_token()
 
     def func_call_Id_set(self):
@@ -634,8 +706,9 @@ class cfg:
     def Dec(self):
         self.dt()
         if self.check_next_token_by_class("Id"):
+            self.Id = self.allTokens[self.token_index]["value"]
+            self.insert_st()
             self.accept_token()
-            # self.Id=s=
             self.list()
             self.put_value()
             if self.check_next_token(";"):
@@ -660,6 +733,9 @@ class cfg:
             self.accept_token()
             self.for_each_loop()
             self.MST()
+        elif self.check_next_token("while"):
+            self.while_loop()
+            self.MST()    
         elif self.check_next_token("break") or self.check_next_token("continue"):
             self.accept_token()
             if self.check_next_token(";"):
