@@ -1,8 +1,11 @@
-# import gg
+# import {gg,asd,lfl}
 
 public class aa{
     aa( ) { }
     private char ml;
+    private struct ml{
+        public number ff;
+    }
     public number as( ) { 
         number asd= (aas + 12 - 78) < (llls + 121);
         ?*for(number i= 30+32 ; 232<12;i++){
