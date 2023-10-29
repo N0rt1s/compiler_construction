@@ -3,9 +3,7 @@
 public class aa{
     aa( ) { }
     private char ml;
-    private struct ss{
-        public number ff;
-    }
+    
     public number as( ) { 
         number asd= (aas + 12 - 78) < (llls + 121);
         ?*for(number i= 30+32 ; 232<12;i++){
@@ -21,11 +19,8 @@ public class aa{
 }
 
 public class ab{
-   aa( ) { }
+   ab( ) { }
     private char ml;
-    private struct sl{
-        public number ff;
-    } 
 }
 
 public struct mm{

@@ -5,19 +5,32 @@ class cfg:
         self.symbol_table = []
         self.definition_table = []
         self.member_table = []
+        self.class_scope = []
+        self.current_class_scope = None
         self.scope = 0
         self.am = ""
         self.Id = ""
         self.type = ""
         self.cp = ""
         self.parent = ""
-        self.ref=""
+        self.ref = ""
 
     def check_next_token_by_class(self, expected_value):
         return self.allTokens[self.token_index]["class"] == expected_value
 
     def check_next_token(self, expected_value):
         return self.allTokens[self.token_index]["value"] == expected_value
+
+    def add_class_scope(self):
+        self.class_scope.append(self.Id)
+        self.current_class_scope = self.class_scope[-1]
+
+    def remove_class_scope(self):
+        self.class_scope.pop()
+        if len(self.class_scope) == 0:
+            self.current_class_scope = None
+        else:
+            self.current_class_scope = self.class_scope[-1]
 
     def insert_st(self):
         existing_object = list(filter(lambda x: x["id"] == self.Id, self.symbol_table))
@@ -34,7 +47,9 @@ class cfg:
             )
 
     def insert_dt(self):
-        existing_object = list(filter(lambda x: x["id"] == self.Id, self.definition_table))
+        existing_object = list(
+            filter(lambda x: x["id"] == self.Id, self.definition_table)
+        )
         if len(existing_object) != 0:
             raise CustomError(f"The Construct {self.Id} already exists.")
         else:
@@ -47,13 +62,13 @@ class cfg:
         if len(existing_object) != 0:
             if existing_object[0]["ref"] != self.ref:
                 self.member_table.append(
-                {"id": self.Id, "type": self.type, "am": self.am, "ref": self.ref}
-            )
+                    {"id": self.Id, "type": self.type, "am": self.am, "ref": self.ref}
+                )
             else:
                 raise CustomError(f"The Construct {self.Id} already exists.")
         else:
             self.member_table.append(
-                {"id": self.Id, "type": self.type, "am": self.am, "parent": self.parent}
+                {"id": self.Id, "type": self.type, "am": self.am, "ref": self.ref}
             )
 
     def accept_token(self):
@@ -124,7 +139,9 @@ class cfg:
                 self.accept_token()
                 self.derived()
                 if self.check_next_token("{"):
-                    self.ref=self.Id
+                    self.class_scope.append(self.Id)
+                    self.current_class_scope(self.current_class_scope[-1])
+                    self.ref = self.Id
                     self.accept_token()
                     self.constructor()
                     self.cst()
@@ -139,7 +156,7 @@ class cfg:
         elif self.check_next_token("struct"):
             self.type = "struct"
             self.accept_token()
-            self.struct()    
+            self.struct()
         else:
             raise ("Exeption")
 
@@ -225,6 +242,7 @@ class cfg:
             else:
                 self.dt()
                 if self.check_next_token_by_class("Id"):
+                    self.Id = self.allTokens[self.token_index]["value"]
                     self.accept_token()
                     self.Dec_Var_func()
                     self.cst()
@@ -639,8 +657,8 @@ class cfg:
             self.Id = self.allTokens[self.token_index]["value"]
             self.accept_token()
             if self.check_next_token("{"):
-                self.ref=self.Id
-                self.parent="-"
+                self.ref = self.Id
+                self.parent = "-"
                 self.insert_dt()
                 self.accept_token()
                 self.sst()
@@ -735,7 +753,7 @@ class cfg:
             self.MST()
         elif self.check_next_token("while"):
             self.while_loop()
-            self.MST()    
+            self.MST()
         elif self.check_next_token("break") or self.check_next_token("continue"):
             self.accept_token()
             if self.check_next_token(";"):
