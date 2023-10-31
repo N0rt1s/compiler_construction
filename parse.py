@@ -1,16 +1,20 @@
-class cfg:
+class Parser:
     def __init__(self, tokens) -> None:
         self.allTokens = tokens
         self.token_index = 0
+        self.testing = self.allTokens[self.token_index]
         self.symbol_table = []
         self.definition_table = []
         self.member_table = []
         self.class_scope = []
         self.current_class_scope = None
-        self.scope = 0
+        self.scope = []
+        self.scopeNumber = 0
         self.am = ""
         self.Id = ""
+        self.var_Id = []
         self.type = ""
+        self.dt_type = ""
         self.cp = ""
         self.parent = ""
         self.ref = ""
@@ -20,56 +24,47 @@ class cfg:
 
     def check_next_token(self, expected_value):
         return self.allTokens[self.token_index]["value"] == expected_value
+    
+    def check_variable_exist(self,id):
+        exists = self.scope[-1].check_variable(id)
+        if not exists:
+            raise CustomError(f"The variable {id} does not exist.")
 
-    def add_class_scope(self):
-        self.class_scope.append(self.Id)
-        self.current_class_scope = self.class_scope[-1]
-
-    def remove_class_scope(self):
-        self.class_scope.pop()
-        if len(self.class_scope) == 0:
-            self.current_class_scope = None
-        else:
-            self.current_class_scope = self.class_scope[-1]
+    def set_class_parent(self):
+        existing_object = list(
+            filter(
+                lambda x: x.Id == self.allTokens[self.token_index]["value"],
+                self.definition_table,
+            )
+        )
+        if len(existing_object) == 0:
+            raise CustomError(
+                f"The Class {self.allTokens[self.token_index]['value']} does not exist."
+            )
+        self.parent = existing_object[0]
 
     def insert_st(self):
-        existing_object = list(filter(lambda x: x["id"] == self.Id, self.symbol_table))
-        if len(existing_object) != 0:
-            if existing_object[0]["scope"] != self.scope:
-                self.symbol_table.append(
-                    {"id": self.Id, "dataType": self.type, "scope": self.scope}
-                )
-            else:
-                raise CustomError(f"The variable {self.Id} already exists.")
-        else:
-            self.symbol_table.append(
-                {"id": self.Id, "dataType": self.type, "scope": self.scope}
-            )
+        for item in self.var_Id:
+            inserted = self.scope[-1].declare_variable(item, self.dt_type)
+            if not inserted:
+                raise CustomError(f"The variable {item} already Declared.")
+        self.var_Id = []
 
     def insert_dt(self):
-        existing_object = list(
-            filter(lambda x: x["id"] == self.Id, self.definition_table)
-        )
+        existing_object = list(filter(lambda x: x.Id == self.Id, self.definition_table))
         if len(existing_object) != 0:
             raise CustomError(f"The Construct {self.Id} already exists.")
         else:
             self.definition_table.append(
-                {"id": self.Id, "type": self.type, "am": self.am, "parent": self.parent}
+                Mt_Scope(self.Id, self.type, self.am, self.parent)
             )
 
     def insert_mt(self):
-        existing_object = list(filter(lambda x: x["id"] == self.Id, self.member_table))
-        if len(existing_object) != 0:
-            if existing_object[0]["ref"] != self.ref:
-                self.member_table.append(
-                    {"id": self.Id, "type": self.type, "am": self.am, "ref": self.ref}
-                )
-            else:
-                raise CustomError(f"The Construct {self.Id} already exists.")
-        else:
-            self.member_table.append(
-                {"id": self.Id, "type": self.type, "am": self.am, "ref": self.ref}
-            )
+        inserted = self.definition_table[-1].declare_variable(
+            self.Id, self.type, self.am
+        )
+        if not inserted:
+            raise CustomError(f"The variable {self.Id} already Declared.")
 
     def accept_token(self):
         self.token_index += 1
@@ -89,7 +84,7 @@ class cfg:
             else:
                 raise ("Exception")
         else:
-            raise ("Exception")
+            pass
 
     def S_or_M(self):
         if self.check_next_token_by_class("Id"):
@@ -140,7 +135,7 @@ class cfg:
                 self.derived()
                 if self.check_next_token("{"):
                     self.class_scope.append(self.Id)
-                    self.current_class_scope(self.current_class_scope[-1])
+                    self.current_class_scope = self.class_scope[-1]
                     self.ref = self.Id
                     self.accept_token()
                     self.constructor()
@@ -164,19 +159,22 @@ class cfg:
         if self.check_next_token(":"):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
-                self.parent = self.allTokens[self.token_index]["value"]
+                self.set_class_parent()
                 self.insert_dt()
                 self.accept_token()
             else:
                 raise ("Exeption")
         else:
-            self.parent = "-"
+            self.parent = None
             self.insert_dt()
             pass
 
     def constructor(self):
         if self.check_next_token_by_class("Id"):
-            self.accept_token()
+            if self.Id == self.allTokens[self.token_index]["value"]:
+                self.accept_token()
+            else:
+                raise (CustomError("Constructor Id should be same as class name!"))
             if self.check_next_token("("):
                 self.accept_token()
                 self.is_params()
@@ -206,8 +204,11 @@ class cfg:
             self.parameters()
 
     def parameters(self):
+        self.type += "=>"
         self.dt_or_id()
         if self.check_next_token_by_class("Id"):
+            self.var_Id.append(self.allTokens[self.token_index]["value"])
+            self.insert_st()
             self.accept_token()
             self.more_params()
         else:
@@ -215,14 +216,19 @@ class cfg:
 
     def dt_or_id(self):
         if self.check_next_token_by_class("DataType"):
+            self.type += self.allTokens[self.token_index]["value"]
+            self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("Id"):
+            self.type += self.allTokens[self.token_index]["value"]
+            self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         else:
             raise ("Exception")
 
     def more_params(self):
         if self.check_next_token(","):
+            self.type += ","
             self.accept_token()
             self.parameters()
         else:
@@ -235,7 +241,7 @@ class cfg:
         else:
             self.acces_specifiers()
             if self.check_next_token("struct"):
-                self.type="struct"
+                self.type = "struct"
                 self.accept_token()
                 self.struct()
                 self.cst()
@@ -277,9 +283,11 @@ class cfg:
     def dt(self):
         if self.check_next_token_by_class("DataType"):
             self.type = self.allTokens[self.token_index]["value"]
+            self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("ArrayDataType"):
             self.type = self.allTokens[self.token_index]["value"]
+            self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         else:
             raise ("Exeption")
@@ -288,8 +296,7 @@ class cfg:
         if self.check_next_token(","):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
-                self.Id = self.allTokens[self.token_index]["value"]
-                self.insert_st()
+                self.var_Id.append(self.allTokens[self.token_index]["value"])
                 self.accept_token()
                 self.list()
             else:
@@ -308,7 +315,7 @@ class cfg:
                 #     raise("Exception")
             elif (
                 self.check_next_token_by_class("strConst")
-                or self.check_next_token_by_class("charConst")
+                or self.check_next_token_by_class("chrConst")
                 or self.check_next_token_by_class("boolConst")
                 or self.check_next_token_by_class("numConst")
                 or self.check_next_token_by_class("Id")
@@ -407,10 +414,15 @@ class cfg:
             if self.check_next_token(")"):
                 self.accept_token()
                 if self.check_next_token("{"):
+                    self.scopeNumber += 1
+                    self.scope.append(St_Scope(self.scope[-1]))
+                    self.symbol_table.append(self.scope[-1])
                     self.accept_token()
                     self.MST()
                     if self.check_next_token("}"):
+                        self.scope.pop()
                         self.accept_token()
+                        self.elif_stat()
                     else:
                         raise ("Exception")
                 else:
@@ -442,6 +454,7 @@ class cfg:
                         if self.check_next_token("}"):
                             self.accept_token()
                             self.elif_stat()
+                            self.else_stat()
                         else:
                             raise ("Exception")
                     else:
@@ -471,12 +484,16 @@ class cfg:
 
     def for_loop(self):
         if self.check_next_token("("):
+            self.scopeNumber += 1
+            self.scope.append(St_Scope(self.scope[-1]))
+            self.symbol_table.append(self.scope[-1])
             self.accept_token()
             self.Dec()
             self.exp()
             if self.check_next_token(";"):
                 self.accept_token()
                 if self.check_next_token_by_class("Id"):
+                    self.check_variable_exist(self.allTokens[self.token_index]["value"])
                     self.accept_token()
                     # self.inc_dec()
                     if self.check_next_token("++") or self.check_next_token("--"):
@@ -487,6 +504,7 @@ class cfg:
                                 self.accept_token()
                                 self.MST()
                                 if self.check_next_token("}"):
+                                    self.scope.pop()
                                     self.accept_token()
                                 else:
                                     raise ("Exception")
@@ -513,9 +531,13 @@ class cfg:
                 if self.check_next_token(")"):
                     self.accept_token()
                     if self.check_next_token("{"):
+                        self.scopeNumber += 1
+                        self.scope.append(St_Scope(self.scope[-1]))
+                        self.symbol_table.append(self.scope[-1])
                         self.accept_token()
                         self.MST()
                         if self.check_next_token("}"):
+                            self.scope.pop()
                             self.accept_token()
                         else:
                             raise ("Exception")
@@ -530,12 +552,18 @@ class cfg:
 
     def for_each_loop(self):
         if self.check_next_token("("):
+            self.scopeNumber += 1
+            self.scope.append(St_Scope(self.scope[-1]))
+            self.symbol_table.append(self.scope[-1])
             self.accept_token()
             if self.check_next_token_by_class("Id"):
+                self.var_Id.append(self.allTokens[self.token_index]["value"])
+                self.insert_st()
                 self.accept_token()
                 if self.check_next_token("in"):
                     self.accept_token()
                     if self.check_next_token_by_class("Id"):
+                        self.check_variable_exist(self.allTokens[self.token_index]["value"])
                         self.accept_token()
                         if self.check_next_token(")"):
                             self.accept_token()
@@ -543,6 +571,7 @@ class cfg:
                                 self.accept_token()
                                 self.MST()
                                 if self.check_next_token("}"):
+                                    self.scope.pop()
                                     self.accept_token()
                                 else:
                                     raise ("Exception")
@@ -658,7 +687,7 @@ class cfg:
             self.accept_token()
             if self.check_next_token("{"):
                 self.ref = self.Id
-                self.parent = "-"
+                self.parent = None
                 self.insert_dt()
                 self.accept_token()
                 self.sst()
@@ -673,16 +702,19 @@ class cfg:
 
     def Dec_Var_func(self):
         if self.check_next_token("("):
+            self.scopeNumber += 1
+            self.scope.append(St_Scope())
+            self.symbol_table.append(self.scope[-1])
             self.accept_token()
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
                 self.insert_mt()
                 if self.check_next_token("{"):
-                    self.scope += 1
                     self.accept_token()
                     self.MST()
                     if self.check_next_token("}"):
+                        self.scope.pop()
                         self.accept_token()
                     else:
                         raise ("Exception")
@@ -694,6 +726,13 @@ class cfg:
         #     self.list()
         #     if self.check_next_token(";"):
         #         self.accept_token()
+        elif self.check_next_token("="):
+            self.put_value()
+            if self.check_next_token(";"):
+                self.accept_token()
+                self.insert_mt()
+            else:
+                raise ("Exception")
         elif self.check_next_token(";"):
             self.insert_mt()
             self.accept_token()
@@ -724,12 +763,12 @@ class cfg:
     def Dec(self):
         self.dt()
         if self.check_next_token_by_class("Id"):
-            self.Id = self.allTokens[self.token_index]["value"]
-            self.insert_st()
+            self.var_Id.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
             self.list()
             self.put_value()
             if self.check_next_token(";"):
+                self.insert_st()
                 self.accept_token()
             else:
                 raise ("Exception")
@@ -737,10 +776,11 @@ class cfg:
             raise ("Exception")
 
     def MST(self):
-        if self.check_next_token_by_class("DataType"):
+        if self.check_next_token_by_class("DataType") or self.check_next_token_by_class("ArrayDataType"):
             self.Dec()
             self.MST()
         elif self.check_next_token("if"):
+            self.accept_token()
             self.if_stat()
             self.MST()
         elif self.check_next_token("for"):
@@ -764,6 +804,7 @@ class cfg:
             self.struct()
             self.MST()
         elif self.check_next_token_by_class("Id"):
+            self.check_variable_exist(self.allTokens[self.token_index]["value"])
             self.accept_token()
             self.func_call_Id_set_class_init()
             if self.check_next_token(";"):
@@ -789,7 +830,7 @@ class cfg:
     def const(self):
         if self.check_next_token_by_class("strConst"):
             self.accept_token()
-        elif self.check_next_token_by_class("charConst"):
+        elif self.check_next_token_by_class("chrConst"):
             self.accept_token()
         elif self.check_next_token_by_class("boolConst"):
             self.accept_token()
@@ -805,7 +846,7 @@ class cfg:
             self.accept_token()
             if (
                 self.check_next_token_by_class("strConst")
-                or self.check_next_token_by_class("charConst")
+                or self.check_next_token_by_class("chrConst")
                 or self.check_next_token_by_class("boolConst")
                 or self.check_next_token_by_class("numConst")
                 or self.check_next_token_by_class("Id")
@@ -848,20 +889,6 @@ class cfg:
         else:
             pass
 
-    # def arrConst(self):
-    #     if self.check_next_token_by_class("strArrConst"):
-    #         self.accept_token()
-    #     elif self.check_next_token_by_class("charArrConst"):
-    #         self.accept_token()
-    #     elif self.check_next_token_by_class("boolArrConst"):
-    #         self.accept_token()
-    #     elif self.check_next_token_by_class("numArrConst"):
-    #         self.accept_token()
-    #     elif self.check_next_token_by_class("objArrConst"):
-    #         self.arrConst()
-    #     else:
-    #         raise ("Exception")
-
     def index(self):
         if self.check_next_token_by_class("numConst"):
             self.accept_token()
@@ -870,6 +897,7 @@ class cfg:
 
     def OP(self):
         if self.check_next_token_by_class("Id"):
+            self.check_variable_exist(self.allTokens[self.token_index]["value"])
             self.accept_token()
             self.OP_more_Id()
         else:
@@ -923,6 +951,7 @@ class cfg:
 
     def VP(self):
         if self.check_next_token_by_class("Id"):
+            self.check_variable_exist(self.allTokens[self.token_index]["value"])
             self.accept_token()
             self.VP_more_Id()
         else:
@@ -1034,24 +1063,9 @@ class cfg:
             pass
 
     def RE(self):
-        # if (
-        #     self.check_next_token_by_class("strConst")
-        #     or self.check_next_token_by_class("charConst")
-        #     or self.check_next_token_by_class("boolConst")
-        #     or self.check_next_token_by_class("numConst")
-        # ):
-        #     self.accept_token()
-        #     self.T1()
-        #     self.E1()
-        #     self.RE1()
-        # elif self.check_next_token_by_class("Id"):
-        #     self.VP()
-        #     self.T1()
-        #     self.E1()
-        #     self.RE1()
         if (
             self.check_next_token_by_class("strConst")
-            or self.check_next_token_by_class("charConst")
+            or self.check_next_token_by_class("chrConst")
             or self.check_next_token_by_class("boolConst")
             or self.check_next_token_by_class("numConst")
             or self.check_next_token_by_class("Id")
@@ -1067,24 +1081,9 @@ class cfg:
     def RE1(self):
         if self.check_next_token_by_class("RelationalOperators"):
             self.accept_token()
-            # if (
-            #     self.check_next_token_by_class("strConst")
-            #     or self.check_next_token_by_class("charConst")
-            #     or self.check_next_token_by_class("boolConst")
-            #     or self.check_next_token_by_class("numConst")
-            # ):
-            #     self.accept_token()
-            #     self.T1()
-            #     self.E1()
-            #     self.RE1()
-            # elif self.check_next_token_by_class("Id"):
-            #     self.VP()
-            #     self.T1()
-            #     self.E1()
-            #     self.RE1()
             if (
                 self.check_next_token_by_class("strConst")
-                or self.check_next_token_by_class("charConst")
+                or self.check_next_token_by_class("chrConst")
                 or self.check_next_token_by_class("boolConst")
                 or self.check_next_token_by_class("numConst")
                 or self.check_next_token_by_class("Id")
@@ -1132,3 +1131,74 @@ class cfg:
 
 class CustomError(Exception):
     pass
+
+
+class St_Scope:
+    def __init__(self, parent=None):
+        self.symbols = []
+        self.parent = parent
+
+    def declare_variable(self, name, type):
+        for symbol in self.symbols:
+            if symbol["id"] == name:
+                return False
+        if self.parent is not None:
+            if not self.parent.check_variable(name):
+                self.symbols.append({"id": name, "type": type})
+            else:
+                return False
+        self.symbols.append({"id": name, "type": type})
+        return True
+
+    def check_variable(self, name):
+        for symbol in self.symbols:
+            if symbol["id"] == name:
+                return True
+        if self.parent is not None:
+            return self.parent.check_variable(name)
+        return False
+
+    def get_variable(self, name):
+        for symbol in self.symbols:
+            if symbol["id"] == name:
+                return symbol
+        if self.parent is not None:
+            return self.parent.get_variable(name)
+        return False
+
+
+class Mt_Scope:
+    def __init__(self, Id, type, am, parent=None):
+        self.members = []
+        self.Id = Id
+        self.am = am
+        self.type = type
+        self.parent = parent
+
+    def declare_variable(self, name, type, am):
+        for symbol in self.members:
+            if symbol["id"] == name:
+                return False
+        # if self.parent is not None:
+        #     if not self.parent.check_variable(name):
+        #         self.members.append({"id": name, "type": type, "am": am})
+        #     else:
+        #         return False
+        self.members.append({"id": name, "type": type, "am": am})
+        return True
+
+    def check_variable(self, name):
+        for symbol in self.members:
+            if symbol["id"] == name:
+                return True
+        if self.parent is not None:
+            return self.parent.check_variable(name)
+        return False
+
+    def get_variable(self, name):
+        for symbol in self.symbols:
+            if symbol["id"] == name:
+                return symbol
+        if self.parent is not None:
+            return self.parent.get_variable(name)
+        return False    

@@ -1,28 +1,51 @@
-# import {gg,asd,lfl}
 
 public class aa{
     aa( ) { }
     private char ml;
+    public number[] ms=[1];
     
-    public number as( ) { 
-        number asd= (aas + 12 - 78) < (llls + 121);
-        ?*for(number i= 30+32 ; 232<12;i++){
+    public number as(number df) { 
+        number asd= (1 + 12 - 78) < (45 + 121);
+        number[] ms=[1];
+        if(asd==0){
+            number mm=14;
+            asd=67;
+            if(mm==1){
+                number cv=12;
+            }
+        }
+        elif(asd==1){
+            number pp=12;
+        }
+        else{
+            asd=121;
+        }
+        if(asd==9){
+            number mm=1;
+        }
+        for(number k= 30+32 ; 232<12;asd++){
             asd++;
-        }*?
+        }
+        forEach(aa in ms){
+            asd=asd+aa;
+        }    
     }
     public number lll( ) { 
-        number asd= (aas + 12 - 78) < (llls + 121);
+        number asd= (1 + 12 - 78) < (23 + 121);
         ?*for(number i= 30+32 ; 232<12;i++){
             asd++;
         }*?
      }
 }
 
-public class ab{
-   ab( ) { }
-    private char ml;
+public class bb:aa{
+    bb(){}
+    public number mm=1;
+    public number[] ms=1;
+    
 }
 
-public struct mm{
-    public number bb;
+public struct as{
+    private char pol='a';
+    public number pok=23;
 }
