@@ -1,5 +1,10 @@
 
-public class aa{
+interface ll{
+    public char s,adsl,xc,asda;
+    public char my();
+}
+
+public class aa:ll{
     aa( ) { }
     private char ml;
     public number[] ms=[1];

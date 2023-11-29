@@ -18,14 +18,15 @@ class Parser:
         self.cp = ""
         self.parent = ""
         self.ref = ""
+        self.interface=[]
 
     def check_next_token_by_class(self, expected_value):
         return self.allTokens[self.token_index]["class"] == expected_value
 
     def check_next_token(self, expected_value):
         return self.allTokens[self.token_index]["value"] == expected_value
-    
-    def check_variable_exist(self,id):
+
+    def check_variable_exist(self, id):
         exists = self.scope[-1].check_variable(id)
         if not exists:
             raise CustomError(f"The variable {id} does not exist.")
@@ -33,7 +34,7 @@ class Parser:
     def set_class_parent(self):
         existing_object = list(
             filter(
-                lambda x: x.Id == self.allTokens[self.token_index]["value"],
+                lambda x: (x.Id == self.allTokens[self.token_index]["value"] and (x.type=="interface" or x.type=="class")),
                 self.definition_table,
             )
         )
@@ -41,7 +42,10 @@ class Parser:
             raise CustomError(
                 f"The Class {self.allTokens[self.token_index]['value']} does not exist."
             )
-        self.parent = existing_object[0]
+        if existing_object.type=="class":
+            self.parent = existing_object[0]
+        else:
+            self.interface.append(existing_object[0])    
 
     def insert_st(self):
         for item in self.var_Id:
@@ -70,6 +74,9 @@ class Parser:
         self.token_index += 1
         if self.token_index > (len(self.allTokens) - 1):
             self.token_index = -1
+
+    ################################################################################################################
+    ################################################################################################################
 
     def start(self):
         self.importing_modules()
@@ -115,7 +122,7 @@ class Parser:
             pass
 
     def rest(self):
-        self.class_struct_dec()
+        self.interface_class_struct_dec()
         self.more_classes()
 
     def more_classes(self):
@@ -124,36 +131,40 @@ class Parser:
         else:
             print("Parsing Complete")
 
-    def class_struct_dec(self):
-        self.acces_specifiers()
-        if self.check_next_token("class"):
-            self.type = "class"
-            self.accept_token()
-            if self.check_next_token_by_class("Id"):
-                self.Id = self.allTokens[self.token_index]["value"]
+    def interface_class_struct_dec(self):
+        if self.check_next_token("interface"):
+            self.type = "interface"
+            self.Interface_dec()
+        else:
+            self.acces_specifiers()
+            if self.check_next_token("class"):
+                self.type = "class"
                 self.accept_token()
-                self.derived()
-                if self.check_next_token("{"):
-                    self.class_scope.append(self.Id)
-                    self.current_class_scope = self.class_scope[-1]
-                    self.ref = self.Id
+                if self.check_next_token_by_class("Id"):
+                    self.Id = self.allTokens[self.token_index]["value"]
                     self.accept_token()
-                    self.constructor()
-                    self.cst()
-                    if self.check_next_token("}"):
+                    self.derived()
+                    if self.check_next_token("{"):
+                        self.class_scope.append(self.Id)
+                        self.current_class_scope = self.class_scope[-1]
+                        self.ref = self.Id
                         self.accept_token()
+                        self.constructor()
+                        self.cst()
+                        if self.check_next_token("}"):
+                            self.accept_token()
+                        else:
+                            raise ("Exeption")
                     else:
                         raise ("Exeption")
                 else:
                     raise ("Exeption")
+            elif self.check_next_token("struct"):
+                self.type = "struct"
+                self.accept_token()
+                self.struct()
             else:
                 raise ("Exeption")
-        elif self.check_next_token("struct"):
-            self.type = "struct"
-            self.accept_token()
-            self.struct()
-        else:
-            raise ("Exeption")
 
     def derived(self):
         if self.check_next_token(":"):
@@ -162,12 +173,20 @@ class Parser:
                 self.set_class_parent()
                 self.insert_dt()
                 self.accept_token()
+                if self.check_next_token(","):
+                    self.derived_list()
             else:
                 raise ("Exeption")
         else:
             self.parent = None
             self.insert_dt()
             pass
+
+    def derived_list(self):
+        if self.check_next_token(","):
+            self.accept_token()
+            if self.check_next_token_by_class("Id"):
+                self.set_class_parent()
 
     def constructor(self):
         if self.check_next_token_by_class("Id"):
@@ -326,33 +345,6 @@ class Parser:
                 raise ("Exception")
         else:
             pass
-
-    # def function(self):
-    #     self.acces_specifiers()
-    #     self.dt()
-    #     if self.check_next_token_by_class("Id"):
-    #         self.accept_token()
-    #         if self.check_next_token("("):
-    #             self.accept_token()
-    #             self.is_params()
-    #             if self.check_next_token(")"):
-    #                 self.accept_token()
-    #                 if self.check_next_token("{"):
-    #                     self.scope+=1
-    #                     self.accept_token()
-    #                     self.MST()
-    #                     if self.check_next_token("}"):
-    #                         self.accept_token()
-    #                     else:
-    #                         raise ("Exception")
-    #                 else:
-    #                     raise ("Exception")
-    #             else:
-    #                 raise ("Exception")
-    #         else:
-    #             raise ("Exception")
-    #     else:
-    #         raise ("Exception")
 
     def return_dec(self):
         if self.check_next_token("return"):
@@ -519,9 +511,6 @@ class Parser:
         else:
             raise ("Exception")
 
-    # def part1(self):
-    #     self.dec()
-
     def while_loop(self):
         if self.check_next_token("while"):
             self.accept_token()
@@ -563,7 +552,9 @@ class Parser:
                 if self.check_next_token("in"):
                     self.accept_token()
                     if self.check_next_token_by_class("Id"):
-                        self.check_variable_exist(self.allTokens[self.token_index]["value"])
+                        self.check_variable_exist(
+                            self.allTokens[self.token_index]["value"]
+                        )
                         self.accept_token()
                         if self.check_next_token(")"):
                             self.accept_token()
@@ -722,10 +713,6 @@ class Parser:
                     raise ("Exception")
             else:
                 raise ("Exception")
-        # elif self.check_next_token(","):
-        #     self.list()
-        #     if self.check_next_token(";"):
-        #         self.accept_token()
         elif self.check_next_token("="):
             self.put_value()
             if self.check_next_token(";"):
@@ -776,7 +763,9 @@ class Parser:
             raise ("Exception")
 
     def MST(self):
-        if self.check_next_token_by_class("DataType") or self.check_next_token_by_class("ArrayDataType"):
+        if self.check_next_token_by_class("DataType") or self.check_next_token_by_class(
+            "ArrayDataType"
+        ):
             self.Dec()
             self.MST()
         elif self.check_next_token("if"):
@@ -1128,7 +1117,75 @@ class Parser:
         else:
             pass
 
+    def Interface_dec(self):
+        if self.check_next_token("interface"):
+            self.accept_token()
+            if self.check_next_token_by_class("Id"):
+                self.Id = self.allTokens[self.token_index]["value"]
+                self.accept_token()
+                if self.check_next_token("{"):
+                    self.accept_token()
+                    self.insert_dt()
+                    self.IST()
+                    if self.check_next_token("}"):
+                        self.accept_token()
+                    else:
+                        raise Exception("Invalid")
+                else:
+                    raise Exception("Invalid")
+            else:
+                raise Exception("Invalid")
+        else:
+            raise Exception("Invalid")
 
+    def IST(self):
+        if self.check_next_token("}"):
+            # self.accept_token()
+            pass
+        else:
+            self.acces_specifiers()
+            self.dt()
+            if self.check_next_token_by_class("Id"):
+                self.Id = self.allTokens[self.token_index]["value"]
+                self.accept_token()
+                self.Inter_Dec_Var_func()
+                if self.check_next_token(";"):
+                    self.accept_token()
+                    self.IST()
+            else:
+                raise Exception("Invalid")
+
+    def Inter_Dec_Var_func(self):
+        if self.check_next_token("("):
+            self.accept_token()
+            self.is_params()
+            if self.check_next_token(")"):
+                self.accept_token()
+                self.insert_mt()
+            else:
+                raise Exception("Invalid")
+        elif self.check_next_token(","):
+            self.I_List()
+        elif self.check_next_token(";"):
+            pass
+        else:
+            raise Exception("Invalid")
+
+    def I_List(self):
+        self.insert_mt()
+        if self.check_next_token(","):
+            self.accept_token()
+            if self.check_next_token_by_class("Id"):
+                self.Id = self.allTokens[self.token_index]["value"]
+                self.accept_token()
+                self.I_List()
+            else:
+                raise Exception("Invalid")
+        else:
+            pass
+
+#######################################################################################################
+#######################################################################################################
 class CustomError(Exception):
     pass
 
@@ -1179,11 +1236,6 @@ class Mt_Scope:
         for symbol in self.members:
             if symbol["id"] == name:
                 return False
-        # if self.parent is not None:
-        #     if not self.parent.check_variable(name):
-        #         self.members.append({"id": name, "type": type, "am": am})
-        #     else:
-        #         return False
         self.members.append({"id": name, "type": type, "am": am})
         return True
 
@@ -1201,4 +1253,4 @@ class Mt_Scope:
                 return symbol
         if self.parent is not None:
             return self.parent.get_variable(name)
-        return False    
+        return False

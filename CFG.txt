@@ -48,11 +48,17 @@
 ##<jump_stat> --> break; | continue; 
 ##<CST> --> <acces_specifiers> <dec_or_cs> | null
 
+##<IST> --> <acces_specifiers>  <dt> Id <Inter_Dec_Var_func> ; <IST>| null
+
 #<dec_or_cs> --> <struct> | <dt> Id <Dec_Var_func> <CST>
 
 #<MST> --> <Dec> <MST>| <for_loop> <MST> | <struct> <MST>| <if_stat> <MST>| <for_each_loop> <MST>| #<While_loop> <MST>| Id <func_call_Id_set_class_init> ; <MST> | <jump_stat> <MST> | <return_dec> <MST> | null
 
 ##<Dec_Var_func> --> <List> ; | ( <is_params> ) { <MST> }
+
+##<Inter_Dec_Var_func> --> <I_List>  | ( <is_params> ) 
+
+##<I_List> --> ,Id  <I_List> | null 
 
 #<func_call_Id_set_class_init> --> <OP_ex_Id> <func_call_Id_set> | <class_init_or_not> | <Inc_dec> | = <exp>
 
@@ -72,8 +78,11 @@
 ##<return_dec> --> return <exp> ; | null 
 
 ##<class_dec> --> <acces_specifiers> class Id <derived> { <constructor> <CST>}
-##<derived> --> : Id | null
+##<derived> --> : Id <derived_list> | null
+##<derived_list> --> , Id <derived_list> | null
 ##<constructor> --> Id ( <is_params> ) { <MST> }
+
+##<Interface_dec> --> interface Id { <IST>}
 
 ##<struct> --> struct Id { <CST> }
 
