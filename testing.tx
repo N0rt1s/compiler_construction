@@ -4,20 +4,26 @@ interface ll{
     public char my();
 }
 
-public class aa:ll{
-    aa( ) { }
+public class bb{
+    bb(){}
+    public number mm=1;
+    public number[] ms=1;
+    
+}
+
+public class aa:bb,ll{
+    aa(char st,number mm ) { }
     private char ml;
     public number[] ms=[1];
     
     public number as(number df) { 
         number asd= (1 + 12 - 78) < (45 + 121);
-        number[] ms=[1];
+        number[] ms=[1,23,4];
+        ml='a';
         if(asd==0){
             number mm=14;
             asd=67;
-            if(mm==1){
-                number cv=12;
-            }
+            
         }
         elif(asd==1){
             number pp=12;
@@ -43,12 +49,7 @@ public class aa:ll{
      }
 }
 
-public class bb:aa{
-    bb(){}
-    public number mm=1;
-    public number[] ms=1;
-    
-}
+
 
 public struct as{
     private char pol='a';

@@ -19,6 +19,9 @@ class Parser:
         self.parent = ""
         self.ref = ""
         self.interface=[]
+        self.constructors=[]
+        self.turn=0
+        self.symboltype=""
 
     def check_next_token_by_class(self, expected_value):
         return self.allTokens[self.token_index]["class"] == expected_value
@@ -27,9 +30,14 @@ class Parser:
         return self.allTokens[self.token_index]["value"] == expected_value
 
     def check_variable_exist(self, id):
-        exists = self.scope[-1].check_variable(id)
-        if not exists:
-            raise CustomError(f"The variable {id} does not exist.")
+        # if self.turn==1:
+            exists,symbol = self.scope[-1].check_variable(id)
+            if not exists:
+                exists,symbol = self.definition_table[-1].check_variable(id)
+                if not exists:
+                    raise CustomError(f"The variable {id} does not exist.")
+            return symbol    
+                
 
     def set_class_parent(self):
         existing_object = list(
@@ -42,33 +50,62 @@ class Parser:
             raise CustomError(
                 f"The Class {self.allTokens[self.token_index]['value']} does not exist."
             )
-        if existing_object.type=="class":
+        if existing_object[0].type=="class":
             self.parent = existing_object[0]
         else:
-            self.interface.append(existing_object[0])    
+            self.interface.append(existing_object[0])
+
+    def set_class_inteface(self):
+        existing_object = list(
+            filter(
+                lambda x: (x.Id == self.allTokens[self.token_index]["value"] and x.type=="interface"),
+                self.definition_table,
+            )
+        )
+        if len(existing_object) == 0:
+            raise CustomError(
+                f"The Class {self.allTokens[self.token_index]['value']} does not exist."
+            )
+       
+        self.interface.append(existing_object[0])            
 
     def insert_st(self):
-        for item in self.var_Id:
-            inserted = self.scope[-1].declare_variable(item, self.dt_type)
-            if not inserted:
-                raise CustomError(f"The variable {item} already Declared.")
-        self.var_Id = []
+        if self.turn==0:
+            for item in self.var_Id:
+                inserted = self.scope[-1].declare_variable(item, self.dt_type)
+                if not inserted:
+                    raise CustomError(f"The variable {item} already Declared.")
+            self.var_Id = []
 
     def insert_dt(self):
-        existing_object = list(filter(lambda x: x.Id == self.Id, self.definition_table))
-        if len(existing_object) != 0:
-            raise CustomError(f"The Construct {self.Id} already exists.")
-        else:
-            self.definition_table.append(
-                Mt_Scope(self.Id, self.type, self.am, self.parent)
-            )
+        if self.turn==0:
+            existing_object = list(filter(lambda x: x.Id == self.Id, self.definition_table))
+            if len(existing_object) != 0:
+                raise CustomError(f"The Construct {self.Id} already exists.")
+            else:
+                self.definition_table.append(
+                    Mt_Scope(self.Id, self.type, self.am, self.parent,self.interface)
+                )
+                self.am=""
 
     def insert_mt(self):
-        inserted = self.definition_table[-1].declare_variable(
-            self.Id, self.type, self.am
-        )
-        if not inserted:
-            raise CustomError(f"The variable {self.Id} already Declared.")
+        if self.turn==0:
+            inserted = self.definition_table[-1].declare_variable(
+                self.Id, self.type, self.am
+            )
+            self.am=""
+
+            if not inserted:
+                raise CustomError(f"The variable {self.Id} already Declared.")
+
+    def insert_mt_constructor(self):
+        if self.turn==0:
+            inserted = self.definition_table[-1].declare_constructor(
+                self.Id, self.type, self.am
+            )
+            if not inserted:
+                raise CustomError(f"The variable {self.Id} already Declared.")
+
 
     def accept_token(self):
         self.token_index += 1
@@ -144,6 +181,9 @@ class Parser:
                     self.Id = self.allTokens[self.token_index]["value"]
                     self.accept_token()
                     self.derived()
+                    self.insert_dt()
+                    self.parent = None
+                    self.interface = []
                     if self.check_next_token("{"):
                         self.class_scope.append(self.Id)
                         self.current_class_scope = self.class_scope[-1]
@@ -171,22 +211,25 @@ class Parser:
             self.accept_token()
             if self.check_next_token_by_class("Id"):
                 self.set_class_parent()
-                self.insert_dt()
                 self.accept_token()
                 if self.check_next_token(","):
                     self.derived_list()
             else:
                 raise ("Exeption")
         else:
-            self.parent = None
-            self.insert_dt()
+            
             pass
 
     def derived_list(self):
         if self.check_next_token(","):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
-                self.set_class_parent()
+                self.set_class_inteface()
+                self.accept_token()
+            else:
+                raise Exception("Exception")  
+        else:
+            raise Exception("Exception")      
 
     def constructor(self):
         if self.check_next_token_by_class("Id"):
@@ -196,13 +239,19 @@ class Parser:
                 raise (CustomError("Constructor Id should be same as class name!"))
             if self.check_next_token("("):
                 self.accept_token()
+                self.scopeNumber += 1
+                self.scope.append(St_Scope())
+                self.symbol_table.append(self.scope[-1])
+                self.type=self.Id
                 self.is_params()
                 if self.check_next_token(")"):
                     self.accept_token()
+                    self.insert_mt_constructor()
                     if self.check_next_token("{"):
                         self.accept_token()
                         self.MST()
                         if self.check_next_token("}"):
+                            self.scope.pop()
                             self.accept_token()
                         else:
                             raise ("Exception")
@@ -377,6 +426,7 @@ class Parser:
             self.param_values()
 
     def param_values(self):
+        self.type+="=>"
         self.OP()
         self.more_value_param()
 
@@ -648,9 +698,11 @@ class Parser:
                     if self.check_next_token("new"):
                         self.accept_token()
                         if self.check_next_token_by_class("Id"):
+                            self.type=self.allTokens[self.token_index]["value"]
                             self.accept_token()
                             if self.check_next_token("("):
                                 self.accept_token()
+                                self.is_param_value()
                                 if self.check_next_token(")"):
                                     self.accept_token()
                                     if self.check_next_token(";"):
@@ -886,7 +938,7 @@ class Parser:
 
     def OP(self):
         if self.check_next_token_by_class("Id"):
-            self.check_variable_exist(self.allTokens[self.token_index]["value"])
+            self.symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
             self.accept_token()
             self.OP_more_Id()
         else:
@@ -906,7 +958,7 @@ class Parser:
             self.index()
             if self.check_next_token("]"):
                 self.accept_token()
-                self.Id_loop()
+                self.OP_Id_loop()
             else:
                 raise ("Exception")
         elif self.check_next_token("("):
@@ -914,7 +966,7 @@ class Parser:
             self.is_param_value()
             if self.check_next_token(")"):
                 self.accept_token()
-                self.Id_loop()
+                self.OP_Id_loop1()
             else:
                 raise ("Exception")
 
@@ -927,7 +979,7 @@ class Parser:
             self.is_param_value()
             if self.check_next_token(")"):
                 self.accept_token()
-                self.Id_loop()
+                self.OP_Id_loop1()
             else:
                 raise ("Exception")
         else:
@@ -958,7 +1010,7 @@ class Parser:
             self.index()
             if self.check_next_token("]"):
                 self.accept_token()
-                self.Id_loop()
+                self.VP_Id_loop()
             else:
                 raise ("Exception")
         elif self.check_next_token("("):
@@ -966,7 +1018,7 @@ class Parser:
             self.is_param_value()
             if self.check_next_token(")"):
                 self.accept_token()
-                self.Id_loop()
+                self.VP_Id_loop1()
             else:
                 raise ("Exception")
 
@@ -979,7 +1031,7 @@ class Parser:
             self.is_param_value()
             if self.check_next_token(")"):
                 self.accept_token()
-                self.Id_loop()
+                self.VP_Id_loop1()
             else:
                 raise ("Exception")
         else:
@@ -1199,21 +1251,21 @@ class St_Scope:
         for symbol in self.symbols:
             if symbol["id"] == name:
                 return False
-        if self.parent is not None:
-            if not self.parent.check_variable(name):
-                self.symbols.append({"id": name, "type": type})
-            else:
-                return False
+        # if self.parent is not None:
+        #     if not self.parent.check_variable(name):
+        #         self.symbols.append({"id": name, "type": type})
+        #     else:
+        #         return False
         self.symbols.append({"id": name, "type": type})
         return True
 
     def check_variable(self, name):
         for symbol in self.symbols:
             if symbol["id"] == name:
-                return True
+                return True,symbol
         if self.parent is not None:
             return self.parent.check_variable(name)
-        return False
+        return False,{}
 
     def get_variable(self, name):
         for symbol in self.symbols:
@@ -1225,12 +1277,13 @@ class St_Scope:
 
 
 class Mt_Scope:
-    def __init__(self, Id, type, am, parent=None):
+    def __init__(self, Id, type, am, parent=None,interfaces=[]):
         self.members = []
         self.Id = Id
         self.am = am
         self.type = type
         self.parent = parent
+        self.interfaces = interfaces
 
     def declare_variable(self, name, type, am):
         for symbol in self.members:
@@ -1238,14 +1291,21 @@ class Mt_Scope:
                 return False
         self.members.append({"id": name, "type": type, "am": am})
         return True
+    
+    def declare_constructor(self, name, type, am):
+        for symbol in self.members:
+            if symbol["id"] == name and symbol["type"]==type:
+                return False
+        self.members.append({"id": name, "type": type, "am": am})
+        return True
 
     def check_variable(self, name):
         for symbol in self.members:
             if symbol["id"] == name:
-                return True
+                return True,symbol
         if self.parent is not None:
             return self.parent.check_variable(name)
-        return False
+        return False,{}
 
     def get_variable(self, name):
         for symbol in self.symbols:
@@ -1254,3 +1314,12 @@ class Mt_Scope:
         if self.parent is not None:
             return self.parent.get_variable(name)
         return False
+# sqlite3 your_database.db
+
+# .mode csv
+# .headers on
+# .output output_file.csv
+
+# SELECT * FROM moz_cookies;
+
+# .quit

@@ -5,9 +5,6 @@ from parse import Parser
 tokenizer = tokenization()
 
 allTokens=[]
-with open("CFG.txt", "r") as file:    
-    lines = file.readlines()
-
 with open('testing.tx', 'r') as file:
     code=file.read()
 tokens = tokenizer.makeTokens(code)

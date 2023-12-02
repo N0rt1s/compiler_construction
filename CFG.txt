@@ -62,7 +62,7 @@
 
 #<func_call_Id_set_class_init> --> <OP_ex_Id> <func_call_Id_set> | <class_init_or_not> | <Inc_dec> | = <exp>
 
-#<class_init_or_not> --> Id | = new Id()
+#<class_init_or_not> --> Id | = new Id(<is_params>)
 
 ##<func_call_Id_set> --> ( <is_params> )  | = <exp> 
 
@@ -86,7 +86,7 @@
 
 ##<struct> --> struct Id { <CST> }
 
-##<class_init> --> Id Id = new Id();
+##<class_init> --> Id Id = new Id(<is_params>);
 
 ##<func_call> --> <OP> ( <is_param_value> );
 
