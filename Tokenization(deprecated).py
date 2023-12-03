@@ -32,9 +32,9 @@ class tokenization:
         self.inc_dec = ["++", "--"]
         self.quotes = r'["\']'
         self.Id = r"^[a-zA-Z_][a-zA-Z0-9_]*$"
-        self.numConst = r"^[0-9.]*$"
+        self.number = r"^[0-9.]*$"
         self.charConst = r"^[a-zA-Z0-9_]$"
-        self.strConst = r'^"[^"]*"$'
+        self.string = r'^"[^"]*"$'
         self.allTokens = []
 
     def makeParts(self, tokens):
@@ -61,12 +61,12 @@ class tokenization:
             #     dictionary1["class"] = "Quotes"
             elif re.match(self.Id, item):
                 dictionary1["class"] = "Id"
-            elif re.match(self.numConst, item):
-                dictionary1["class"] = "numConst"
+            elif re.match(self.number, item):
+                dictionary1["class"] = "number"
             elif re.match(self.charConst, item):
-                dictionary1["class"] = "chrConst"
-            elif re.match(self.strConst, item):
-                dictionary1["class"] = "strConst"
+                dictionary1["class"] = "char"
+            elif re.match(self.string, item):
+                dictionary1["class"] = "string"
             else:
                 dictionary1["class"] = "InvalidToken"
             parts.append(dictionary1)

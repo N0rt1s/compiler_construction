@@ -13,7 +13,7 @@
 
 ##<value> --> <VP> | <const> | (<exp>)
 
-##<const> --> strConst | charConst | boolConst | numConst | <arrConst>
+##<const> --> string | charConst | bool | number | <arrConst>
 
 ##<arrConst> --> [ <elementlist_arraylist> ]
 
@@ -29,7 +29,7 @@
 
 ##<Inc_dec> --> ++ | -- 
 
-##<index> --> numConst
+##<index> --> number
 
 #<OP> --> Id <OP_more_Id>
 #<OP_more_Id> --> <OP_ex_Id> | null

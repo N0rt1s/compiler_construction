@@ -29,6 +29,11 @@ class Parser:
     def check_next_token(self, expected_value):
         return self.allTokens[self.token_index]["value"] == expected_value
 
+    def accept_token(self):
+        self.token_index += 1
+        if self.token_index > (len(self.allTokens) - 1):
+            self.token_index = -1
+
     def check_variable_exist(self, id):
         # if self.turn==1:
             exists,symbol = self.scope[-1].check_variable(id)
@@ -37,7 +42,15 @@ class Parser:
                 if not exists:
                     raise CustomError(f"The variable {id} does not exist.")
             return symbol    
-                
+
+    def check_class_exist(self,id):
+        existing_object = list(filter(lambda x: (x.Id == id),self.definition_table)) 
+        if len(existing_object) == 0:
+            raise CustomError(
+                f"The Construct {self.Id} does not exist."
+            )
+        else:
+            pass      
 
     def set_class_parent(self):
         existing_object = list(
@@ -106,11 +119,19 @@ class Parser:
             if not inserted:
                 raise CustomError(f"The variable {self.Id} already Declared.")
 
-
-    def accept_token(self):
-        self.token_index += 1
-        if self.token_index > (len(self.allTokens) - 1):
-            self.token_index = -1
+    def compatibility_check(self,typeone,typetwo,operator):
+        if(typeone=="number" and typetwo=="number"):
+            return "number"
+        elif(typeone=="string" and typetwo=="char" and operator=="+"):
+            return "string"
+        elif(typeone=="string" and typetwo=="string" and operator=="+"):
+            return "string"
+        elif(typeone=="char" and typetwo=="char" and operator=="+"):
+            return "string"
+        elif(typeone==typetwo and operator=="relational"):
+            return "bool"
+        else:
+            raise CustomError("Type Missmatch!")
 
     ################################################################################################################
     ################################################################################################################
@@ -382,10 +403,10 @@ class Parser:
                 # else:
                 #     raise("Exception")
             elif (
-                self.check_next_token_by_class("strConst")
-                or self.check_next_token_by_class("chrConst")
-                or self.check_next_token_by_class("boolConst")
-                or self.check_next_token_by_class("numConst")
+                self.check_next_token_by_class("string")
+                or self.check_next_token_by_class("char")
+                or self.check_next_token_by_class("bool")
+                or self.check_next_token_by_class("number")
                 or self.check_next_token_by_class("Id")
                 or self.check_next_token("(")
             ):
@@ -423,16 +444,18 @@ class Parser:
             self.accept_token()
             pass
         else:
+            self.type+="=>"
             self.param_values()
 
     def param_values(self):
-        self.type+="=>"
-        self.OP()
+        self.exp()
         self.more_value_param()
 
     def more_value_param(self):
+        self.type+=self.symboltype
         if self.check_next_token(","):
             self.accept_token()
+            self.type+=","
             self.param_values()
         else:
             pass
@@ -845,7 +868,7 @@ class Parser:
             self.struct()
             self.MST()
         elif self.check_next_token_by_class("Id"):
-            self.check_variable_exist(self.allTokens[self.token_index]["value"])
+            self.Id=self.allTokens[self.token_index]["value"]
             self.accept_token()
             self.func_call_Id_set_class_init()
             if self.check_next_token(";"):
@@ -869,13 +892,13 @@ class Parser:
             raise ("Exception")
 
     def const(self):
-        if self.check_next_token_by_class("strConst"):
+        if self.check_next_token_by_class("string"):
             self.accept_token()
-        elif self.check_next_token_by_class("chrConst"):
+        elif self.check_next_token_by_class("char"):
             self.accept_token()
-        elif self.check_next_token_by_class("boolConst"):
+        elif self.check_next_token_by_class("bool"):
             self.accept_token()
-        elif self.check_next_token_by_class("numConst"):
+        elif self.check_next_token_by_class("number"):
             self.accept_token()
         # elif self.check_next_token("["):
         #     self.arrConst()
@@ -886,10 +909,10 @@ class Parser:
         if self.check_next_token("["):
             self.accept_token()
             if (
-                self.check_next_token_by_class("strConst")
-                or self.check_next_token_by_class("chrConst")
-                or self.check_next_token_by_class("boolConst")
-                or self.check_next_token_by_class("numConst")
+                self.check_next_token_by_class("string")
+                or self.check_next_token_by_class("char")
+                or self.check_next_token_by_class("bool")
+                or self.check_next_token_by_class("number")
                 or self.check_next_token_by_class("Id")
             ):
                 self.element_list()
@@ -931,7 +954,7 @@ class Parser:
             pass
 
     def index(self):
-        if self.check_next_token_by_class("numConst"):
+        if self.check_next_token_by_class("number"):
             self.accept_token()
         else:
             raise ("Exception")
@@ -939,6 +962,8 @@ class Parser:
     def OP(self):
         if self.check_next_token_by_class("Id"):
             self.symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+            if self.symboltype.__contains__("=>"):
+                self.symboltype=self.symboltype.split("=")[0]
             self.accept_token()
             self.OP_more_Id()
         else:
@@ -992,7 +1017,7 @@ class Parser:
 
     def VP(self):
         if self.check_next_token_by_class("Id"):
-            self.check_variable_exist(self.allTokens[self.token_index]["value"])
+            
             self.accept_token()
             self.VP_more_Id()
         else:
@@ -1044,13 +1069,18 @@ class Parser:
 
     def func_call_Id_set_class_init(self):
         if self.check_next_token("[") or self.check_next_token("("):
+            self.check_variable_exist(self.Id)
             self.OP_ex_Id()
         elif self.check_next_token("="):
+            self.check_variable_exist(self.Id)
             self.accept_token()
             self.exp()
         elif self.check_next_token_by_class("Id"):
+            self.check_class_exist(self.Id)
+            self.type=self.Id
             self.class_init_or_not()
         elif self.check_next_token("++") or self.check_next_token("--"):
+            self.check_variable_exist(self.Id)
             self.accept_token()
         else:
             raise ("Exception")
@@ -1058,16 +1088,20 @@ class Parser:
     def class_init_or_not(self):
         if self.check_next_token_by_class("Id"):
             self.accept_token()
-        elif self.check_next_token("="):
-            self.accept_token()
-            if self.check_next_token("new"):
+            if self.check_next_token("="):
                 self.accept_token()
-                if self.check_next_token_by_class("Id"):
+                if self.check_next_token("new"):
                     self.accept_token()
-                    if self.check_next_token("("):
+                    if self.check_next_token_by_class("Id"):
+                        # self.type=self.allTokens[self.token_index]["value"]
                         self.accept_token()
-                        if self.check_next_token(")"):
+                        if self.check_next_token("("):
                             self.accept_token()
+                            self.is_param_value()
+                            if self.check_next_token(")"):
+                                self.accept_token()
+                            else:
+                                raise ("Exception")
                         else:
                             raise ("Exception")
                     else:
@@ -1076,8 +1110,6 @@ class Parser:
                     raise ("Exception")
             else:
                 raise ("Exception")
-        else:
-            raise ("Exception")
 
     def exp(self):
         self.AE()
@@ -1105,13 +1137,19 @@ class Parser:
 
     def RE(self):
         if (
-            self.check_next_token_by_class("strConst")
-            or self.check_next_token_by_class("chrConst")
-            or self.check_next_token_by_class("boolConst")
-            or self.check_next_token_by_class("numConst")
+            self.check_next_token_by_class("string")
+            or self.check_next_token_by_class("char")
+            or self.check_next_token_by_class("bool")
+            or self.check_next_token_by_class("number")
             or self.check_next_token_by_class("Id")
             or self.check_next_token("(")
         ):
+            if self.allTokens[self.token_index]["class"]!="Punctuators" :
+                self.symboltype=self.allTokens[self.token_index]["class"]
+                if self.symboltype=="Id":
+                    self.symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+                    if self.symboltype.__contains__("=>"):
+                        self.symboltype=self.symboltype.split("=")[0]
             self.value()
             self.T1()
             self.E1()
@@ -1123,13 +1161,20 @@ class Parser:
         if self.check_next_token_by_class("RelationalOperators"):
             self.accept_token()
             if (
-                self.check_next_token_by_class("strConst")
-                or self.check_next_token_by_class("chrConst")
-                or self.check_next_token_by_class("boolConst")
-                or self.check_next_token_by_class("numConst")
+                self.check_next_token_by_class("string")
+                or self.check_next_token_by_class("char")
+                or self.check_next_token_by_class("bool")
+                or self.check_next_token_by_class("number")
                 or self.check_next_token_by_class("Id")
                 or self.check_next_token("(")
             ):
+                if self.allTokens[self.token_index]["class"]!="Punctuators" :
+                    sec_symboltype=self.allTokens[self.token_index]["class"]
+                    if sec_symboltype=="Id":
+                        sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+                        if sec_symboltype.__contains__("=>"):
+                            sec_symboltype=sec_symboltype.split("=")[0]
+                    self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"relational")        
                 self.value()
                 self.T1()
                 self.E1()
@@ -1142,11 +1187,25 @@ class Parser:
     def E1(self):
         if self.check_next_token("+"):
             self.accept_token()
+            if self.allTokens[self.token_index]["class"]!="Punctuators" :
+                sec_symboltype=self.allTokens[self.token_index]["class"]
+                if sec_symboltype=="Id":
+                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+                    if sec_symboltype.__contains__("=>"):
+                        sec_symboltype=sec_symboltype.split("=")[0]
+                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"+")        
             self.value()
             self.T1()
             self.E1()
         elif self.check_next_token("-"):
             self.accept_token()
+            if self.allTokens[self.token_index]["class"]!="Punctuators" :
+                sec_symboltype=self.allTokens[self.token_index]["class"]
+                if sec_symboltype=="Id":
+                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+                    if sec_symboltype.__contains__("=>"):
+                        sec_symboltype=sec_symboltype.split("=")[0]
+                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"-")        
             self.value()
             self.T1()
             self.E1()
@@ -1156,14 +1215,35 @@ class Parser:
     def T1(self):
         if self.check_next_token("*"):
             self.accept_token()
+            if self.allTokens[self.token_index]["class"]!="Punctuators" :
+                sec_symboltype=self.allTokens[self.token_index]["class"]
+                if sec_symboltype=="Id":
+                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+                    if sec_symboltype.__contains__("=>"):
+                        sec_symboltype=sec_symboltype.split("=")[0]
+                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"*")        
             self.value()
             self.T1()
         elif self.check_next_token("/"):
             self.accept_token()
+            if self.allTokens[self.token_index]["class"]!="Punctuators" :
+                sec_symboltype=self.allTokens[self.token_index]["class"]
+                if sec_symboltype=="Id":
+                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+                    if sec_symboltype.__contains__("=>"):
+                        sec_symboltype=sec_symboltype.split("=")[0]
+                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"/")        
             self.value()
             self.T1()
         elif self.check_next_token("%"):
             self.accept_token()
+            if self.allTokens[self.token_index]["class"]!="Punctuators" :
+                sec_symboltype=self.allTokens[self.token_index]["class"]
+                if sec_symboltype=="Id":
+                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+                    if sec_symboltype.__contains__("=>"):
+                        sec_symboltype=sec_symboltype.split("=")[0]
+                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"%")        
             self.value()
             self.T1()
         else:
