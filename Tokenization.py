@@ -16,7 +16,7 @@ class tokenization:
             (r"'(?:\\.|[^\\'])'", "char"),
             (r"[0-9]+", "number"),
             (r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", "Id"),
-            (r"[\[\],(){};:]", "Punctuators"),
+            (r"[\[\],(){};:.]", "Punctuators"),
             (r"==|!=|<=|>=|<|>", "RelationalOperators"),
             (r"\+\+|--", "IncDecOperator"),
             (r"[+\-=/*%]", "Operator"),
@@ -57,3 +57,28 @@ class tokenization:
 # tokens=token.makeTokens(code)
 # for token in tokens:
 #     print(token)
+code = """
+interface ll{
+    public char s,adsl,xc,asda;
+    public char my();
+}
+
+public class bb{
+    bb(){}
+    public number mm=1;
+    public number[] ms=1;
+}
+
+public class aa{
+    aa(char st,number mm ) { }
+    private char ml;
+    public string ms="test";
+}
+"""
+
+pattern = r'"([^"]*)"'
+
+matches = re.findall(pattern, code)
+
+for match in matches:
+    print(f'Match: {match}')

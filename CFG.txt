@@ -33,7 +33,7 @@
 
 #<OP> --> Id <OP_more_Id>
 #<OP_more_Id> --> <OP_ex_Id> | null
-#<OP_ex_Id> --> [<index>] <OP_Id_loop> | (<is_param_value>) <OP_Id_loop1> 
+#<OP_ex_Id> --> [<index>] <OP_Id_loop> | (<is_param_value>) <OP_Id_loop1> | . <OP>
 #<OP_Id_loop> --> . <OP> | (<is_param_value>) <OP_Id_loop1> | null
 #<OP_Id_loop1> --> . <OP> 
 

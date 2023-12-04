@@ -7,6 +7,7 @@ tokenizer = tokenization()
 allTokens=[]
 with open('testing.tx', 'r') as file:
     code=file.read()
+    # code = f'"""{code}"""'
 tokens = tokenizer.makeTokens(code)
 # for item in parts:
 #     print(f"Class: {item['class']}, Value: {item['value']}")

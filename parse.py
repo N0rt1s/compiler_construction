@@ -16,12 +16,14 @@ class Parser:
         self.type = ""
         self.dt_type = ""
         self.cp = ""
-        self.parent = ""
+        self.parent = None
         self.ref = ""
-        self.interface=[]
-        self.constructors=[]
-        self.turn=0
-        self.symboltype=""
+        self.interface = []
+        self.constructors = []
+        self.turn = 0
+        self.symboltype = ""
+        self.check_obj = False
+        self.param_type = ""
 
     def check_next_token_by_class(self, expected_value):
         return self.allTokens[self.token_index]["class"] == expected_value
@@ -36,26 +38,45 @@ class Parser:
 
     def check_variable_exist(self, id):
         # if self.turn==1:
-            exists,symbol = self.scope[-1].check_variable(id)
-            if not exists:
-                exists,symbol = self.definition_table[-1].check_variable(id)
-                if not exists:
-                    raise CustomError(f"The variable {id} does not exist.")
-            return symbol    
+        exists, symbol = self.scope[-1].check_variable(id)
+        if not exists:
+            return self.lookup_mt(id)
+        return symbol
 
-    def check_class_exist(self,id):
-        existing_object = list(filter(lambda x: (x.Id == id),self.definition_table)) 
+    def lookup_mt(self, id):
+        exists, symbol = self.definition_table[-1].check_variable(id)
+        if not exists:
+            raise CustomError(f"The member {id} does not exist.")
+        return symbol
+
+    def lookup_mt_for_object(self, classId, id):
+        existing_class = list(
+            filter(lambda x: (x.Id == classId), self.definition_table)
+        )
+        if len(existing_class) == 0:
+            raise CustomError(f"Variable {id} is not of type class.")
+        exists, symbol = existing_class[-1].check_variable(id)
+        if not exists:
+            raise CustomError(f"The member {id} does not exist.")
+        elif symbol["am"] == "private":
+            raise CustomError(f"Cannot use private member {id}.")
+
+        return symbol
+
+    def check_class_exist(self, id):
+        existing_object = list(filter(lambda x: (x.Id == id), self.definition_table))
         if len(existing_object) == 0:
-            raise CustomError(
-                f"The Construct {self.Id} does not exist."
-            )
+            raise CustomError(f"The Construct {self.Id} does not exist.")
         else:
-            pass      
+            pass
 
     def set_class_parent(self):
         existing_object = list(
             filter(
-                lambda x: (x.Id == self.allTokens[self.token_index]["value"] and (x.type=="interface" or x.type=="class")),
+                lambda x: (
+                    x.Id == self.allTokens[self.token_index]["value"]
+                    and (x.type == "interface" or x.type == "class")
+                ),
                 self.definition_table,
             )
         )
@@ -63,7 +84,7 @@ class Parser:
             raise CustomError(
                 f"The Class {self.allTokens[self.token_index]['value']} does not exist."
             )
-        if existing_object[0].type=="class":
+        if existing_object[0].type == "class":
             self.parent = existing_object[0]
         else:
             self.interface.append(existing_object[0])
@@ -71,7 +92,10 @@ class Parser:
     def set_class_inteface(self):
         existing_object = list(
             filter(
-                lambda x: (x.Id == self.allTokens[self.token_index]["value"] and x.type=="interface"),
+                lambda x: (
+                    x.Id == self.allTokens[self.token_index]["value"]
+                    and x.type == "interface"
+                ),
                 self.definition_table,
             )
         )
@@ -79,11 +103,11 @@ class Parser:
             raise CustomError(
                 f"The Class {self.allTokens[self.token_index]['value']} does not exist."
             )
-       
-        self.interface.append(existing_object[0])            
+
+        self.interface.append(existing_object[0])
 
     def insert_st(self):
-        if self.turn==0:
+        if self.turn == 0:
             for item in self.var_Id:
                 inserted = self.scope[-1].declare_variable(item, self.dt_type)
                 if not inserted:
@@ -91,44 +115,54 @@ class Parser:
             self.var_Id = []
 
     def insert_dt(self):
-        if self.turn==0:
-            existing_object = list(filter(lambda x: x.Id == self.Id, self.definition_table))
+        if self.turn == 0:
+            existing_object = list(
+                filter(lambda x: x.Id == self.Id, self.definition_table)
+            )
             if len(existing_object) != 0:
                 raise CustomError(f"The Construct {self.Id} already exists.")
             else:
                 self.definition_table.append(
-                    Mt_Scope(self.Id, self.type, self.am, self.parent,self.interface)
+                    Mt_Scope(self.Id, self.type, self.am, self.parent, self.interface)
                 )
-                self.am=""
+                self.am = ""
 
     def insert_mt(self):
-        if self.turn==0:
+        if self.turn == 0:
             inserted = self.definition_table[-1].declare_variable(
                 self.Id, self.type, self.am
             )
-            self.am=""
+            self.am = ""
 
             if not inserted:
                 raise CustomError(f"The variable {self.Id} already Declared.")
 
     def insert_mt_constructor(self):
-        if self.turn==0:
+        if self.turn == 0:
             inserted = self.definition_table[-1].declare_constructor(
                 self.Id, self.type, self.am
             )
             if not inserted:
                 raise CustomError(f"The variable {self.Id} already Declared.")
 
-    def compatibility_check(self,typeone,typetwo,operator):
-        if(typeone=="number" and typetwo=="number"):
+    def lookup_constructor(self, classId, type):
+        existing_class = list(
+            filter(lambda x: (x.Id == classId), self.definition_table)
+        )
+        exists, symbol = existing_class[-1].check_constructor(classId, type)
+        if not exists:
+            raise CustomError(f"No valid Constructor for class {classId} exist.")
+
+    def compatibility_check(self, typeone, typetwo, operator):
+        if typeone == "number" and typetwo == "number":
             return "number"
-        elif(typeone=="string" and typetwo=="char" and operator=="+"):
+        elif typeone == "string" and typetwo == "char" and operator == "+":
             return "string"
-        elif(typeone=="string" and typetwo=="string" and operator=="+"):
+        elif typeone == "string" and typetwo == "string" and operator == "+":
             return "string"
-        elif(typeone=="char" and typetwo=="char" and operator=="+"):
+        elif typeone == "char" and typetwo == "char" and operator == "+":
             return "string"
-        elif(typeone==typetwo and operator=="relational"):
+        elif typeone == typetwo and operator == "relational":
             return "bool"
         else:
             raise CustomError("Type Missmatch!")
@@ -238,7 +272,6 @@ class Parser:
             else:
                 raise ("Exeption")
         else:
-            
             pass
 
     def derived_list(self):
@@ -248,9 +281,9 @@ class Parser:
                 self.set_class_inteface()
                 self.accept_token()
             else:
-                raise Exception("Exception")  
+                raise Exception("Exception")
         else:
-            raise Exception("Exception")      
+            raise Exception("Exception")
 
     def constructor(self):
         if self.check_next_token_by_class("Id"):
@@ -263,7 +296,7 @@ class Parser:
                 self.scopeNumber += 1
                 self.scope.append(St_Scope())
                 self.symbol_table.append(self.scope[-1])
-                self.type=self.Id
+                self.type = self.Id
                 self.is_params()
                 if self.check_next_token(")"):
                     self.accept_token()
@@ -378,6 +411,10 @@ class Parser:
             self.type = self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
+        elif self.check_next_token_by_class("Id"):
+            self.type = self.allTokens[self.token_index]["value"]
+            self.dt_type = self.allTokens[self.token_index]["value"]
+            self.accept_token()    
         else:
             raise ("Exeption")
 
@@ -411,6 +448,7 @@ class Parser:
                 or self.check_next_token("(")
             ):
                 self.exp()
+                self.compatibility_check(self.dt_type, self.symboltype, "relational")
             else:
                 raise ("Exception")
         else:
@@ -441,10 +479,10 @@ class Parser:
 
     def is_param_value(self):
         if self.check_next_token(")"):
-            self.accept_token()
+            # self.accept_token()
             pass
         else:
-            self.type+="=>"
+            self.param_type += "=>"
             self.param_values()
 
     def param_values(self):
@@ -452,10 +490,10 @@ class Parser:
         self.more_value_param()
 
     def more_value_param(self):
-        self.type+=self.symboltype
+        self.param_type += self.symboltype
         if self.check_next_token(","):
             self.accept_token()
-            self.type+=","
+            self.param_type += ","
             self.param_values()
         else:
             pass
@@ -721,7 +759,7 @@ class Parser:
                     if self.check_next_token("new"):
                         self.accept_token()
                         if self.check_next_token_by_class("Id"):
-                            self.type=self.allTokens[self.token_index]["value"]
+                            self.type = self.allTokens[self.token_index]["value"]
                             self.accept_token()
                             if self.check_next_token("("):
                                 self.accept_token()
@@ -868,7 +906,7 @@ class Parser:
             self.struct()
             self.MST()
         elif self.check_next_token_by_class("Id"):
-            self.Id=self.allTokens[self.token_index]["value"]
+            self.Id = self.allTokens[self.token_index]["value"]
             self.accept_token()
             self.func_call_Id_set_class_init()
             if self.check_next_token(";"):
@@ -961,9 +999,21 @@ class Parser:
 
     def OP(self):
         if self.check_next_token_by_class("Id"):
-            self.symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
-            if self.symboltype.__contains__("=>"):
-                self.symboltype=self.symboltype.split("=")[0]
+            if self.check_obj:
+                self.type = self.lookup_mt_for_object(
+                    self.dt_type.split("=")[0]
+                    if self.dt_type.__contains__("=>")
+                    else self.dt_type,
+                    self.allTokens[self.token_index]["value"],
+                )["type"]
+            else:
+                self.type = self.check_variable_exist(
+                    self.allTokens[self.token_index]["value"]
+                )["type"]
+            self.check_obj=False
+            if self.type.__contains__("=>"):
+                self.type = self.type.split("=")[0]
+            # self.Id=self.allTokens[self.token_index]["value"]
             self.accept_token()
             self.OP_more_Id()
         else:
@@ -973,6 +1023,8 @@ class Parser:
         if self.check_next_token("["):
             self.OP_ex_Id()
         elif self.check_next_token("("):
+            self.OP_ex_Id()
+        elif self.check_next_token("."):
             self.OP_ex_Id()
         else:
             pass
@@ -990,10 +1042,16 @@ class Parser:
             self.accept_token()
             self.is_param_value()
             if self.check_next_token(")"):
+                self.compatibility_check(self.dt_type.split(">")[1], self.self.param_type.split(">")[1], "relational")
+                self.param_type=""
                 self.accept_token()
                 self.OP_Id_loop1()
             else:
                 raise ("Exception")
+        elif self.check_next_token("."):
+            self.check_obj = True
+            self.accept_token()
+            self.OP()
 
     def OP_Id_loop(self):
         if self.check_next_token("."):
@@ -1003,6 +1061,8 @@ class Parser:
             self.accept_token()
             self.is_param_value()
             if self.check_next_token(")"):
+                self.compatibility_check(self.dt_type.split(">")[1], self.self.param_type.split(">")[1], "relational")
+                self.param_type=""
                 self.accept_token()
                 self.OP_Id_loop1()
             else:
@@ -1013,10 +1073,23 @@ class Parser:
     def OP_Id_loop1(self):
         if self.check_next_token("."):
             self.accept_token()
+            self.check_obj=True
             self.OP()
 
     def VP(self):
         if self.check_next_token_by_class("Id"):
+            if self.check_obj:
+                self.dt_type = self.lookup_mt_for_object(
+                    self.dt_type.split("=")[0]
+                    if self.dt_type.__contains__("=>")
+                    else self.dt_type,
+                    self.allTokens[self.token_index]["value"],
+                )["type"]
+            else:
+                self.dt_type = self.check_variable_exist(
+                    self.allTokens[self.token_index]["value"]
+                )["type"]
+            self.check_obj=False
             
             self.accept_token()
             self.VP_more_Id()
@@ -1025,6 +1098,10 @@ class Parser:
 
     def VP_more_Id(self):
         if self.check_next_token("["):
+            self.VP_ex_Id()
+        elif self.check_next_token("("):
+            self.VP_ex_Id()
+        elif self.check_next_token("."):
             self.VP_ex_Id()
         else:
             pass
@@ -1042,19 +1119,28 @@ class Parser:
             self.accept_token()
             self.is_param_value()
             if self.check_next_token(")"):
+                self.compatibility_check(self.dt_type.split(">")[1], self.param_type.split(">")[1], "relational")
+                self.param_type=""
                 self.accept_token()
                 self.VP_Id_loop1()
             else:
                 raise ("Exception")
+        elif self.check_next_token("."):
+            self.accept_token()
+            self.check_obj=True
+            self.VP()    
 
     def VP_Id_loop(self):
         if self.check_next_token("."):
             self.accept_token()
+            self.check_obj=True
             self.VP()
         elif self.check_next_token("("):
             self.accept_token()
             self.is_param_value()
             if self.check_next_token(")"):
+                self.compatibility_check(self.dt_type.split(">")[1], self.param_type.split(">")[1], "relational")
+                self.param_type=""
                 self.accept_token()
                 self.VP_Id_loop1()
             else:
@@ -1065,28 +1151,42 @@ class Parser:
     def VP_Id_loop1(self):
         if self.check_next_token("."):
             self.accept_token()
+            self.check_obj=True
             self.VP()
+        self.symboltype=self.dt_type.split("=")[0]if self.dt_type.__contains__("=>")else self.dt_type
+        print("dd")
 
     def func_call_Id_set_class_init(self):
-        if self.check_next_token("[") or self.check_next_token("("):
-            self.check_variable_exist(self.Id)
+        if (
+            self.check_next_token("[")
+            or self.check_next_token("(")
+            or self.check_next_token(".")
+        ):
+            self.symboltype = self.check_variable_exist(self.Id)["type"]
+            self.dt_type = self.check_variable_exist(self.Id)["type"]
             self.OP_ex_Id()
+            self.func_call_Id_set_class_init()
         elif self.check_next_token("="):
             self.check_variable_exist(self.Id)
             self.accept_token()
             self.exp()
+            self.compatibility_check(self.type, self.symboltype, "relational")
         elif self.check_next_token_by_class("Id"):
             self.check_class_exist(self.Id)
-            self.type=self.Id
+            self.type = self.Id
             self.class_init_or_not()
         elif self.check_next_token("++") or self.check_next_token("--"):
             self.check_variable_exist(self.Id)
             self.accept_token()
+        elif self.check_next_token(";"):
+            # self.accept_token()
+            pass
         else:
             raise ("Exception")
 
     def class_init_or_not(self):
         if self.check_next_token_by_class("Id"):
+            id = self.allTokens[self.token_index]["value"]
             self.accept_token()
             if self.check_next_token("="):
                 self.accept_token()
@@ -1099,6 +1199,12 @@ class Parser:
                             self.accept_token()
                             self.is_param_value()
                             if self.check_next_token(")"):
+                                self.lookup_constructor(
+                                    self.type.split("=")[0], self.type
+                                )
+                                self.dt_type = self.Id
+                                self.var_Id.append(id)
+                                self.insert_st()
                                 self.accept_token()
                             else:
                                 raise ("Exception")
@@ -1144,12 +1250,14 @@ class Parser:
             or self.check_next_token_by_class("Id")
             or self.check_next_token("(")
         ):
-            if self.allTokens[self.token_index]["class"]!="Punctuators" :
-                self.symboltype=self.allTokens[self.token_index]["class"]
-                if self.symboltype=="Id":
-                    self.symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+            if self.allTokens[self.token_index]["class"] != "Punctuators":
+                self.symboltype = self.allTokens[self.token_index]["class"]
+                if self.symboltype == "Id":
+                    self.symboltype = self.check_variable_exist(
+                        self.allTokens[self.token_index]["value"]
+                    )["type"]
                     if self.symboltype.__contains__("=>"):
-                        self.symboltype=self.symboltype.split("=")[0]
+                        self.symboltype = self.symboltype.split("=")[0]
             self.value()
             self.T1()
             self.E1()
@@ -1168,13 +1276,17 @@ class Parser:
                 or self.check_next_token_by_class("Id")
                 or self.check_next_token("(")
             ):
-                if self.allTokens[self.token_index]["class"]!="Punctuators" :
-                    sec_symboltype=self.allTokens[self.token_index]["class"]
-                    if sec_symboltype=="Id":
-                        sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+                if self.allTokens[self.token_index]["class"] != "Punctuators":
+                    sec_symboltype = self.allTokens[self.token_index]["class"]
+                    if sec_symboltype == "Id":
+                        sec_symboltype = self.check_variable_exist(
+                            self.allTokens[self.token_index]["value"]
+                        )["type"]
                         if sec_symboltype.__contains__("=>"):
-                            sec_symboltype=sec_symboltype.split("=")[0]
-                    self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"relational")        
+                            sec_symboltype = sec_symboltype.split("=")[0]
+                    self.symboltype = self.compatibility_check(
+                        self.symboltype, sec_symboltype, "relational"
+                    )
                 self.value()
                 self.T1()
                 self.E1()
@@ -1187,25 +1299,33 @@ class Parser:
     def E1(self):
         if self.check_next_token("+"):
             self.accept_token()
-            if self.allTokens[self.token_index]["class"]!="Punctuators" :
-                sec_symboltype=self.allTokens[self.token_index]["class"]
-                if sec_symboltype=="Id":
-                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+            if self.allTokens[self.token_index]["class"] != "Punctuators":
+                sec_symboltype = self.allTokens[self.token_index]["class"]
+                if sec_symboltype == "Id":
+                    sec_symboltype = self.check_variable_exist(
+                        self.allTokens[self.token_index]["value"]
+                    )["type"]
                     if sec_symboltype.__contains__("=>"):
-                        sec_symboltype=sec_symboltype.split("=")[0]
-                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"+")        
+                        sec_symboltype = sec_symboltype.split("=")[0]
+                self.symboltype = self.compatibility_check(
+                    self.symboltype, sec_symboltype, "+"
+                )
             self.value()
             self.T1()
             self.E1()
         elif self.check_next_token("-"):
             self.accept_token()
-            if self.allTokens[self.token_index]["class"]!="Punctuators" :
-                sec_symboltype=self.allTokens[self.token_index]["class"]
-                if sec_symboltype=="Id":
-                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+            if self.allTokens[self.token_index]["class"] != "Punctuators":
+                sec_symboltype = self.allTokens[self.token_index]["class"]
+                if sec_symboltype == "Id":
+                    sec_symboltype = self.check_variable_exist(
+                        self.allTokens[self.token_index]["value"]
+                    )["type"]
                     if sec_symboltype.__contains__("=>"):
-                        sec_symboltype=sec_symboltype.split("=")[0]
-                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"-")        
+                        sec_symboltype = sec_symboltype.split("=")[0]
+                self.symboltype = self.compatibility_check(
+                    self.symboltype, sec_symboltype, "-"
+                )
             self.value()
             self.T1()
             self.E1()
@@ -1215,35 +1335,47 @@ class Parser:
     def T1(self):
         if self.check_next_token("*"):
             self.accept_token()
-            if self.allTokens[self.token_index]["class"]!="Punctuators" :
-                sec_symboltype=self.allTokens[self.token_index]["class"]
-                if sec_symboltype=="Id":
-                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+            if self.allTokens[self.token_index]["class"] != "Punctuators":
+                sec_symboltype = self.allTokens[self.token_index]["class"]
+                if sec_symboltype == "Id":
+                    sec_symboltype = self.check_variable_exist(
+                        self.allTokens[self.token_index]["value"]
+                    )["type"]
                     if sec_symboltype.__contains__("=>"):
-                        sec_symboltype=sec_symboltype.split("=")[0]
-                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"*")        
+                        sec_symboltype = sec_symboltype.split("=")[0]
+                self.symboltype = self.compatibility_check(
+                    self.symboltype, sec_symboltype, "*"
+                )
             self.value()
             self.T1()
         elif self.check_next_token("/"):
             self.accept_token()
-            if self.allTokens[self.token_index]["class"]!="Punctuators" :
-                sec_symboltype=self.allTokens[self.token_index]["class"]
-                if sec_symboltype=="Id":
-                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+            if self.allTokens[self.token_index]["class"] != "Punctuators":
+                sec_symboltype = self.allTokens[self.token_index]["class"]
+                if sec_symboltype == "Id":
+                    sec_symboltype = self.check_variable_exist(
+                        self.allTokens[self.token_index]["value"]
+                    )["type"]
                     if sec_symboltype.__contains__("=>"):
-                        sec_symboltype=sec_symboltype.split("=")[0]
-                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"/")        
+                        sec_symboltype = sec_symboltype.split("=")[0]
+                self.symboltype = self.compatibility_check(
+                    self.symboltype, sec_symboltype, "/"
+                )
             self.value()
             self.T1()
         elif self.check_next_token("%"):
             self.accept_token()
-            if self.allTokens[self.token_index]["class"]!="Punctuators" :
-                sec_symboltype=self.allTokens[self.token_index]["class"]
-                if sec_symboltype=="Id":
-                    sec_symboltype=self.check_variable_exist(self.allTokens[self.token_index]["value"])["type"]
+            if self.allTokens[self.token_index]["class"] != "Punctuators":
+                sec_symboltype = self.allTokens[self.token_index]["class"]
+                if sec_symboltype == "Id":
+                    sec_symboltype = self.check_variable_exist(
+                        self.allTokens[self.token_index]["value"]
+                    )["type"]
                     if sec_symboltype.__contains__("=>"):
-                        sec_symboltype=sec_symboltype.split("=")[0]
-                self.symboltype=self.compatibility_check(self.symboltype,sec_symboltype,"%")        
+                        sec_symboltype = sec_symboltype.split("=")[0]
+                self.symboltype = self.compatibility_check(
+                    self.symboltype, sec_symboltype, "%"
+                )
             self.value()
             self.T1()
         else:
@@ -1316,6 +1448,7 @@ class Parser:
         else:
             pass
 
+
 #######################################################################################################
 #######################################################################################################
 class CustomError(Exception):
@@ -1331,21 +1464,16 @@ class St_Scope:
         for symbol in self.symbols:
             if symbol["id"] == name:
                 return False
-        # if self.parent is not None:
-        #     if not self.parent.check_variable(name):
-        #         self.symbols.append({"id": name, "type": type})
-        #     else:
-        #         return False
         self.symbols.append({"id": name, "type": type})
         return True
 
     def check_variable(self, name):
         for symbol in self.symbols:
             if symbol["id"] == name:
-                return True,symbol
+                return True, symbol
         if self.parent is not None:
             return self.parent.check_variable(name)
-        return False,{}
+        return False, {}
 
     def get_variable(self, name):
         for symbol in self.symbols:
@@ -1357,7 +1485,7 @@ class St_Scope:
 
 
 class Mt_Scope:
-    def __init__(self, Id, type, am, parent=None,interfaces=[]):
+    def __init__(self, Id, type, am, parent=None, interfaces=[]):
         self.members = []
         self.Id = Id
         self.am = am
@@ -1371,10 +1499,10 @@ class Mt_Scope:
                 return False
         self.members.append({"id": name, "type": type, "am": am})
         return True
-    
+
     def declare_constructor(self, name, type, am):
         for symbol in self.members:
-            if symbol["id"] == name and symbol["type"]==type:
+            if symbol["id"] == name and symbol["type"] == type:
                 return False
         self.members.append({"id": name, "type": type, "am": am})
         return True
@@ -1382,10 +1510,18 @@ class Mt_Scope:
     def check_variable(self, name):
         for symbol in self.members:
             if symbol["id"] == name:
-                return True,symbol
+                return True, symbol
         if self.parent is not None:
             return self.parent.check_variable(name)
-        return False,{}
+        return False, {}
+
+    def check_constructor(self, name, type):
+        for symbol in self.members:
+            if symbol["id"] == name and symbol["type"] == type:
+                return True, symbol
+        if self.parent is not None:
+            return self.parent.check_variable(name)
+        return False, {}
 
     def get_variable(self, name):
         for symbol in self.symbols:
@@ -1394,6 +1530,8 @@ class Mt_Scope:
         if self.parent is not None:
             return self.parent.get_variable(name)
         return False
+
+
 # sqlite3 your_database.db
 
 # .mode csv

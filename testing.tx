@@ -6,23 +6,22 @@ interface ll{
 
 public class bb{
     bb(){}
-    public number mm=1;
-    public number[] ms=1;
+    public number mm=0;
+    public number[] ms=[1];
     
 }
 
 public class aa{
     aa(char st,number mm ) { }
     private char ml;
-    public number[] ms=[1];
+    public char ms='a';
     
-    public number as(number df) { 
+    public bb as(number df) { 
         number asd= (1 + 12 - 78) < (45 + 121);
         number[] ms=[1,23,4];
-        bb aclass = new bb(asd , 'a' + 't');
-        ml='a';
+        bb aclass = new bb();
         if(asd==0){
-            number mm=14;
+            number mm=4;
             asd=67;
             
         }
@@ -32,6 +31,7 @@ public class aa{
         else{
             asd=121;
         }
+        aclass.mm=0;
         if(asd==9){
             number mm=1;
         }
@@ -44,6 +44,7 @@ public class aa{
     }
     public number lll( ) { 
         number asd= (1 + 12 - 78) < (23 + 121);
+        asd=as(9).mm+4;
         ?*for(number i= 30+32 ; 232<12;i++){
             asd++;
         }*?

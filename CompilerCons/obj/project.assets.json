@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/noor/compiler_construction/CompilerCons/CompilerCons.csproj",
+      "projectUniqueName": "/home/noor/University/compiler_construction/CompilerCons/CompilerCons.csproj",
       "projectName": "CompilerCons",
-      "projectPath": "/home/noor/compiler_construction/CompilerCons/CompilerCons.csproj",
+      "projectPath": "/home/noor/University/compiler_construction/CompilerCons/CompilerCons.csproj",
       "packagesPath": "/home/noor/.nuget/packages/",
-      "outputPath": "/home/noor/compiler_construction/CompilerCons/obj/",
+      "outputPath": "/home/noor/University/compiler_construction/CompilerCons/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/noor/.nuget/NuGet/NuGet.Config"
