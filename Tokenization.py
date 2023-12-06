@@ -12,9 +12,9 @@ class tokenization:
             (r"\s*(number\[\]|char\[\]|bool\[\]|string\[\])\s*", "ArrayDataType"),
             (r"\b(number|char|bool|string)\b", "DataType"),
             (r'true|false$',"bool"),
-            (r'^"[^"]*"$', "string"),
+            (r'"(?:[^\\"]|\\.)*"', "string"),
             (r"'(?:\\.|[^\\'])'", "char"),
-            (r"[0-9]+", "number"),
+            (r"-?\d*\.?\d+", "number"),
             (r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", "Id"),
             (r"[\[\],(){};:.]", "Punctuators"),
             (r"==|!=|<=|>=|<|>", "RelationalOperators"),
@@ -32,8 +32,18 @@ class tokenization:
                 match = re.match(pattern, code)
                 if match:
                     value = match.group(0)
-                    if token_type:
-                        tokens.append({"class":token_type,"value":value.strip()})
+                    if token_type == "number":
+                        if len(tokens)!=0:
+                            if value.__contains__("-") and tokens[-1]["value"] not in [";","(","=","==","<=",">=","<",">","[","+","-","*","/","%"]:
+                                value="-"
+                                tokens.append({"class": token_type, "value": value})
+                                # tokens.extend(re.findall(r'-?\d+|\S', value))
+                            else:        
+                                tokens.append({"class": token_type, "value": value.strip()})
+                        else:        
+                            tokens.append({"class": token_type, "value": value.strip()})
+                    elif token_type:
+                        tokens.append({"class": token_type, "value": value.strip()})
                     code = code[len(value) :].lstrip()
                     break
             else:

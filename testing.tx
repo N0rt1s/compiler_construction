@@ -1,4 +1,5 @@
-
+??1+5/-.232(-7+9.232)
+??mm="afas";
 interface ll{
     public char s,adsl,xc,asda;
     public char my();
@@ -12,12 +13,16 @@ public class bb{
 }
 
 public class aa{
-    aa(char st,number mm ) { }
-    private char ml;
+    private string ml;
     public char ms='a';
-    
+    aa(char st,number mm ) { 
+        ml="1jfnajs";
+    }
+    aa() { 
+        ml="1jfnajs";
+    }
     public bb as(number df) { 
-        number asd= (1 + 12 - 78) < (45 + 121);
+        number asd= (1 + 12 - 78) + (45 + 121);
         number[] ms=[1,23,4];
         bb aclass = new bb();
         if(asd==0){
@@ -35,7 +40,7 @@ public class aa{
         if(asd==9){
             number mm=1;
         }
-        for(number k= 30+32 ; 232<12;asd++){
+        for(number k= 30+.32 ; -232<12;asd++){
             asd++;
         }
         forEach(aa in ms){
@@ -43,8 +48,8 @@ public class aa{
         }    
     }
     public number lll( ) { 
-        number asd= (1 + 12 - 78) < (23 + 121);
-        asd=as(9).mm+4;
+        number asd= (1 + 12 - 78) / (23 + 121);
+        asd=as(9).mm+(4-9);
         ?*for(number i= 30+32 ; 232<12;i++){
             asd++;
         }*?

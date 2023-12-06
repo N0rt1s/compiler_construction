@@ -1,29 +1,28 @@
+from semantic import build_expression_tree_with_types, put_result
+
+
 class Parser:
     def __init__(self, tokens) -> None:
         self.allTokens = tokens
         self.token_index = 0
-        self.testing = self.allTokens[self.token_index]
         self.symbol_table = []
         self.definition_table = []
         self.member_table = []
         self.class_scope = []
         self.current_class_scope = None
         self.scope = []
-        self.scopeNumber = 0
         self.am = ""
         self.Id = ""
         self.var_Id = []
         self.type = ""
         self.dt_type = ""
-        self.cp = ""
         self.parent = None
-        self.ref = ""
         self.interface = []
         self.constructors = []
         self.turn = 0
-        self.symboltype = ""
         self.check_obj = False
         self.param_type = ""
+        self.expression = []
 
     def check_next_token_by_class(self, expected_value):
         return self.allTokens[self.token_index]["class"] == expected_value
@@ -137,14 +136,6 @@ class Parser:
             if not inserted:
                 raise CustomError(f"The variable {self.Id} already Declared.")
 
-    def insert_mt_constructor(self):
-        if self.turn == 0:
-            inserted = self.definition_table[-1].declare_constructor(
-                self.Id, self.type, self.am
-            )
-            if not inserted:
-                raise CustomError(f"The variable {self.Id} already Declared.")
-
     def lookup_constructor(self, classId, type):
         existing_class = list(
             filter(lambda x: (x.Id == classId), self.definition_table)
@@ -242,11 +233,13 @@ class Parser:
                     if self.check_next_token("{"):
                         self.class_scope.append(self.Id)
                         self.current_class_scope = self.class_scope[-1]
-                        self.ref = self.Id
                         self.accept_token()
-                        self.constructor()
+                        # self.constructor()
                         self.cst()
                         if self.check_next_token("}"):
+                            self.definition_table[-1].declare_constructor(
+                                self.current_class_scope, self.current_class_scope
+                            )
                             self.accept_token()
                         else:
                             raise ("Exeption")
@@ -287,20 +280,22 @@ class Parser:
 
     def constructor(self):
         if self.check_next_token_by_class("Id"):
-            if self.Id == self.allTokens[self.token_index]["value"]:
+            if self.current_class_scope == self.allTokens[self.token_index]["value"]:
                 self.accept_token()
             else:
                 raise (CustomError("Constructor Id should be same as class name!"))
             if self.check_next_token("("):
                 self.accept_token()
-                self.scopeNumber += 1
                 self.scope.append(St_Scope())
                 self.symbol_table.append(self.scope[-1])
                 self.type = self.Id
+                self.param_type=""
                 self.is_params()
                 if self.check_next_token(")"):
                     self.accept_token()
-                    self.insert_mt_constructor()
+                    self.definition_table[-1].declare_constructor(
+                        self.current_class_scope, self.current_class_scope + self.param_type
+                    )
                     if self.check_next_token("{"):
                         self.accept_token()
                         self.MST()
@@ -323,10 +318,11 @@ class Parser:
             # self.accept_token()
             pass
         else:
+            self.type += "=>"
+            self.param_type += "=>"
             self.parameters()
 
     def parameters(self):
-        self.type += "=>"
         self.dt_or_id()
         if self.check_next_token_by_class("Id"):
             self.var_Id.append(self.allTokens[self.token_index]["value"])
@@ -339,10 +335,12 @@ class Parser:
     def dt_or_id(self):
         if self.check_next_token_by_class("DataType"):
             self.type += self.allTokens[self.token_index]["value"]
+            self.param_type += self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("Id"):
             self.type += self.allTokens[self.token_index]["value"]
+            self.param_type += self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         else:
@@ -351,6 +349,7 @@ class Parser:
     def more_params(self):
         if self.check_next_token(","):
             self.type += ","
+            self.param_type += ","
             self.accept_token()
             self.parameters()
         else:
@@ -360,6 +359,9 @@ class Parser:
         if self.check_next_token("}"):
             # self.accept_token()
             pass
+        elif self.check_next_token_by_class("Id"):
+            self.constructor()
+            self.cst()
         else:
             self.acces_specifiers()
             if self.check_next_token("struct"):
@@ -414,7 +416,7 @@ class Parser:
         elif self.check_next_token_by_class("Id"):
             self.type = self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
-            self.accept_token()    
+            self.accept_token()
         else:
             raise ("Exeption")
 
@@ -447,8 +449,11 @@ class Parser:
                 or self.check_next_token_by_class("Id")
                 or self.check_next_token("(")
             ):
+                self.expression = []
                 self.exp()
-                self.compatibility_check(self.dt_type, self.symboltype, "relational")
+                temp_type = build_expression_tree_with_types(self.expression)
+                self.expression = []
+                self.compatibility_check(self.dt_type, temp_type, "relational")
             else:
                 raise ("Exception")
         else:
@@ -457,25 +462,12 @@ class Parser:
     def return_dec(self):
         if self.check_next_token("return"):
             self.accept_token()
+            self.expression = []
             self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.expression = []
         else:
             pass
-
-    def func_call(self):
-        self.OP()
-        if self.check_next_token("("):
-            self.accept_token()
-            self.is_param_value()
-            if self.check_next_token(")"):
-                self.accept_token()
-                if self.check_next_token(";"):
-                    self.accept_token()
-                else:
-                    raise ("Exception")
-            else:
-                raise ("Exception")
-        else:
-            raise ("Exception")
 
     def is_param_value(self):
         if self.check_next_token(")"):
@@ -486,11 +478,16 @@ class Parser:
             self.param_values()
 
     def param_values(self):
+        temp_exp = self.expression
+        self.expression = []
         self.exp()
-        self.more_value_param()
+        temp_type = build_expression_tree_with_types(self.expression)
+        self.expression = temp_exp
+        self.expression.append(put_result(temp_type))
+        self.more_value_param(temp_type)
 
-    def more_value_param(self):
-        self.param_type += self.symboltype
+    def more_value_param(self, type):
+        self.param_type += type
         if self.check_next_token(","):
             self.accept_token()
             self.param_type += ","
@@ -502,7 +499,10 @@ class Parser:
         self.OP()
         if self.check_next_token("="):
             self.accept_token()
+            self.expression = []
             self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.expression = []
             if self.check_next_token(";"):
                 self.accept_token()
             else:
@@ -513,11 +513,14 @@ class Parser:
     def if_stat(self):
         if self.check_next_token("("):
             self.accept_token()
+            self.expression = []
             self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.compatibility_check("bool", temp_type, "relational")
+            self.expression = []
             if self.check_next_token(")"):
                 self.accept_token()
                 if self.check_next_token("{"):
-                    self.scopeNumber += 1
                     self.scope.append(St_Scope(self.scope[-1]))
                     self.symbol_table.append(self.scope[-1])
                     self.accept_token()
@@ -548,7 +551,11 @@ class Parser:
             self.accept_token()
             if self.check_next_token("("):
                 self.accept_token()
+                self.expression = []
                 self.exp()
+                temp_type = build_expression_tree_with_types(self.expression)
+                self.compatibility_check("bool", temp_type, "relational")
+                self.expression = []
                 if self.check_next_token(")"):
                     self.accept_token()
                     if self.check_next_token("{"):
@@ -587,12 +594,15 @@ class Parser:
 
     def for_loop(self):
         if self.check_next_token("("):
-            self.scopeNumber += 1
             self.scope.append(St_Scope(self.scope[-1]))
             self.symbol_table.append(self.scope[-1])
             self.accept_token()
             self.Dec()
+            self.expression = []
             self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+
+            self.expression = []
             if self.check_next_token(";"):
                 self.accept_token()
                 if self.check_next_token_by_class("Id"):
@@ -627,11 +637,14 @@ class Parser:
             self.accept_token()
             if self.check_next_token("("):
                 self.accept_token()
+                self.expression = []
                 self.exp()
+                temp_type = build_expression_tree_with_types(self.expression)
+                self.compatibility_check("bool", temp_type, "relational")
+                self.expression = []
                 if self.check_next_token(")"):
                     self.accept_token()
                     if self.check_next_token("{"):
-                        self.scopeNumber += 1
                         self.scope.append(St_Scope(self.scope[-1]))
                         self.symbol_table.append(self.scope[-1])
                         self.accept_token()
@@ -652,7 +665,6 @@ class Parser:
 
     def for_each_loop(self):
         if self.check_next_token("("):
-            self.scopeNumber += 1
             self.scope.append(St_Scope(self.scope[-1]))
             self.symbol_table.append(self.scope[-1])
             self.accept_token()
@@ -704,9 +716,11 @@ class Parser:
         if self.check_next_token_by_class("Id"):
             self.VP()
         elif self.check_next_token("("):
+            self.expression.append("(")
             self.accept_token()
             self.exp()
             if self.check_next_token(")"):
+                self.expression.append(")")
                 self.accept_token()
             else:
                 raise ("Exception")
@@ -749,48 +763,11 @@ class Parser:
             if self.check_next_token(";"):
                 self.accept_token()
 
-    def class_int(self):
-        if self.check_next_token_by_class("Id"):
-            self.accept_token()
-            if self.check_next_token_by_class("Id"):
-                self.accept_token()
-                if self.check_next_token("="):
-                    self.accept_token()
-                    if self.check_next_token("new"):
-                        self.accept_token()
-                        if self.check_next_token_by_class("Id"):
-                            self.type = self.allTokens[self.token_index]["value"]
-                            self.accept_token()
-                            if self.check_next_token("("):
-                                self.accept_token()
-                                self.is_param_value()
-                                if self.check_next_token(")"):
-                                    self.accept_token()
-                                    if self.check_next_token(";"):
-                                        self.accept_token()
-                                    else:
-                                        raise ("Exception")
-                                else:
-                                    raise ("Exception")
-                            else:
-                                raise ("Exception")
-                        else:
-                            raise ("Exception")
-                    else:
-                        raise ("Exception")
-                else:
-                    raise ("Exception")
-            else:
-                raise ("Exception")
-                # else:
-                raise ("Exception")
-
     def struct(self):
         if self.check_next_token_by_class("Id"):
             self.Id = self.allTokens[self.token_index]["value"]
             self.accept_token()
             if self.check_next_token("{"):
-                self.ref = self.Id
                 self.parent = None
                 self.insert_dt()
                 self.accept_token()
@@ -806,10 +783,10 @@ class Parser:
 
     def Dec_Var_func(self):
         if self.check_next_token("("):
-            self.scopeNumber += 1
             self.scope.append(St_Scope())
             self.symbol_table.append(self.scope[-1])
             self.accept_token()
+            self.param_type=""
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
@@ -836,29 +813,6 @@ class Parser:
         elif self.check_next_token(";"):
             self.insert_mt()
             self.accept_token()
-
-    def func_call_Id_set(self):
-        if self.check_next_token("("):
-            self.accept_token()
-            self.is_params()
-            if self.check_next_token(")"):
-                self.accept_token()
-                if self.check_next_token(";"):
-                    self.accept_token()
-                else:
-                    raise ("Exception")
-            else:
-                raise ("Exception")
-        else:
-            if self.check_next_token("="):
-                self.accept_token()
-                self.exp()
-                if self.check_next_token(";"):
-                    self.accept_token()
-                else:
-                    raise ("Exception")
-            else:
-                raise ("Exception")
 
     def Dec(self):
         self.dt()
@@ -908,7 +862,12 @@ class Parser:
         elif self.check_next_token_by_class("Id"):
             self.Id = self.allTokens[self.token_index]["value"]
             self.accept_token()
-            self.func_call_Id_set_class_init()
+            temp_type = ""
+            if self.check_next_token_by_class("Id"):
+                temp_type = self.check_class_exist(self.Id)
+            else:
+                temp_type = self.check_variable_exist(self.Id)["type"]
+            self.func_call_Id_set_class_init(temp_type)
             if self.check_next_token(";"):
                 self.accept_token()
                 self.MST()
@@ -931,12 +890,16 @@ class Parser:
 
     def const(self):
         if self.check_next_token_by_class("string"):
+            self.expression.append(put_result("string"))
             self.accept_token()
         elif self.check_next_token_by_class("char"):
+            self.expression.append(put_result("char"))
             self.accept_token()
         elif self.check_next_token_by_class("bool"):
+            self.expression.append(put_result("bool"))
             self.accept_token()
         elif self.check_next_token_by_class("number"):
+            self.expression.append(put_result("number"))
             self.accept_token()
         # elif self.check_next_token("["):
         #     self.arrConst()
@@ -970,7 +933,11 @@ class Parser:
             raise ("Exception")
 
     def element_list(self):
+        self.expression = []
         self.exp()
+        temp_type = build_expression_tree_with_types(self.expression)
+        self.expression = []
+
         self.more_array_value()
 
     def arr_list(self):
@@ -997,186 +964,206 @@ class Parser:
         else:
             raise ("Exception")
 
-    def OP(self):
+
+    def OP(self, type=None):
         if self.check_next_token_by_class("Id"):
+            temp_type = ""
             if self.check_obj:
-                self.type = self.lookup_mt_for_object(
-                    self.dt_type.split("=")[0]
-                    if self.dt_type.__contains__("=>")
-                    else self.dt_type,
+                temp_type = self.lookup_mt_for_object(
+                    type.split("=")[0] if type.__contains__("=>") else type,
                     self.allTokens[self.token_index]["value"],
                 )["type"]
             else:
-                self.type = self.check_variable_exist(
+                temp_type = self.check_variable_exist(
                     self.allTokens[self.token_index]["value"]
                 )["type"]
-            self.check_obj=False
-            if self.type.__contains__("=>"):
-                self.type = self.type.split("=")[0]
-            # self.Id=self.allTokens[self.token_index]["value"]
+            self.check_obj = False
+
             self.accept_token()
-            self.OP_more_Id()
+            self.OP_ex_Id(temp_type)
         else:
             raise ("Exception")
 
-    def OP_more_Id(self):
-        if self.check_next_token("["):
-            self.OP_ex_Id()
-        elif self.check_next_token("("):
-            self.OP_ex_Id()
-        elif self.check_next_token("."):
-            self.OP_ex_Id()
-        else:
-            pass
-
-    def OP_ex_Id(self):
+    def OP_ex_Id(self, type=None):
         if self.check_next_token("["):
             self.accept_token()
-            self.index()
+            temp_exp = self.expression
+            self.expression = []
+            self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.compatibility_check(type, temp_type, "relational")
+            self.expression = temp_exp
+            self.dt_type = temp_type
+            # self.expression.append(put_result(temp_type))
             if self.check_next_token("]"):
                 self.accept_token()
-                self.OP_Id_loop()
+                self.OP_ex_Id(temp_type)
             else:
                 raise ("Exception")
         elif self.check_next_token("("):
             self.accept_token()
+            temp_exp = self.expression
+            self.expression = []
+            self.param_type=""
             self.is_param_value()
             if self.check_next_token(")"):
-                self.compatibility_check(self.dt_type.split(">")[1], self.self.param_type.split(">")[1], "relational")
-                self.param_type=""
+                self.compatibility_check(
+                    type.split(">")[1], self.param_type.split(">")[1], "relational"
+                )
+                self.expression = temp_exp
+                # self.dt_type = temp_type
+                # self.expression.append(put_result(type.split("=>")[0]))
+                self.param_type = ""
                 self.accept_token()
-                self.OP_Id_loop1()
+                self.OP_Id_loop(type)
             else:
                 raise ("Exception")
         elif self.check_next_token("."):
+            self.accept_token()
             self.check_obj = True
-            self.accept_token()
-            self.OP()
+            self.OP(type)
+        else:
+            self.expression.append(
+                put_result(type.split("=")[0] if type.__contains__("=>") else type)
+            )
+            self.dt_type = type.split("=")[0] if type.__contains__("=>") else type
 
-    def OP_Id_loop(self):
+    def OP_Id_loop(self, type):
         if self.check_next_token("."):
             self.accept_token()
-            self.OP()
-        elif self.check_next_token("("):
+            self.check_obj = True
+            self.OP(type)
+        elif self.check_next_token("["):
             self.accept_token()
-            self.is_param_value()
-            if self.check_next_token(")"):
-                self.compatibility_check(self.dt_type.split(">")[1], self.self.param_type.split(">")[1], "relational")
-                self.param_type=""
+            temp_exp = self.expression
+            self.expression = []
+            self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.compatibility_check(type, temp_type, "relational")
+            self.expression = temp_exp
+            self.dt_type = temp_type
+            # self.expression.append(put_result(temp_type))
+            if self.check_next_token("]"):
                 self.accept_token()
-                self.OP_Id_loop1()
+                self.OP_ex_Id(temp_type)
             else:
                 raise ("Exception")
-        else:
-            pass
-
-    def OP_Id_loop1(self):
-        if self.check_next_token("."):
-            self.accept_token()
-            self.check_obj=True
-            self.OP()
-
-    def VP(self):
-        if self.check_next_token_by_class("Id"):
-            if self.check_obj:
-                self.dt_type = self.lookup_mt_for_object(
-                    self.dt_type.split("=")[0]
-                    if self.dt_type.__contains__("=>")
-                    else self.dt_type,
-                    self.allTokens[self.token_index]["value"],
-                )["type"]
-            else:
-                self.dt_type = self.check_variable_exist(
-                    self.allTokens[self.token_index]["value"]
-                )["type"]
-            self.check_obj=False
-            
-            self.accept_token()
-            self.VP_more_Id()
         else:
             raise ("Exception")
 
-    def VP_more_Id(self):
-        if self.check_next_token("["):
-            self.VP_ex_Id()
-        elif self.check_next_token("("):
-            self.VP_ex_Id()
-        elif self.check_next_token("."):
-            self.VP_ex_Id()
-        else:
-            pass
+    def VP(self, type=None):
+        if self.check_next_token_by_class("Id"):
+            temp_type = ""
+            if self.check_obj:
+                temp_type = self.lookup_mt_for_object(
+                    type.split("=")[0] if type.__contains__("=>") else type,
+                    self.allTokens[self.token_index]["value"],
+                )["type"]
+            else:
+                temp_type = self.check_variable_exist(
+                    self.allTokens[self.token_index]["value"]
+                )["type"]
+            self.check_obj = False
 
-    def VP_ex_Id(self):
+            self.accept_token()
+            self.VP_ex_Id(temp_type)
+        else:
+            raise ("Exception")
+
+    def VP_ex_Id(self, type):
         if self.check_next_token("["):
             self.accept_token()
-            self.index()
+            temp_exp = self.expression
+            self.expression = []
+            self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.compatibility_check(type, temp_type, "relational")
+            self.expression = temp_exp
+            self.dt_type = temp_type
+            # self.expression.append(put_result(temp_type))
             if self.check_next_token("]"):
                 self.accept_token()
-                self.VP_Id_loop()
+                self.VP_ex_Id(temp_type)
             else:
                 raise ("Exception")
         elif self.check_next_token("("):
             self.accept_token()
+            temp_exp = self.expression
+            self.expression = []
+            self.param_type=""
             self.is_param_value()
             if self.check_next_token(")"):
-                self.compatibility_check(self.dt_type.split(">")[1], self.param_type.split(">")[1], "relational")
-                self.param_type=""
+                self.compatibility_check(
+                    type.split(">")[1], self.param_type.split(">")[1], "relational"
+                )
+                self.expression = temp_exp
+                # self.dt_type = temp_type
+                # self.expression.append(put_result(type.split("=>")[0]))
+                self.param_type = ""
                 self.accept_token()
-                self.VP_Id_loop1()
+                self.VP_Id_loop(type)
             else:
                 raise ("Exception")
         elif self.check_next_token("."):
             self.accept_token()
-            self.check_obj=True
-            self.VP()    
+            self.check_obj = True
+            self.VP(type)
+        else:
+            self.expression.append(
+                put_result(type.split("=")[0] if type.__contains__("=>") else type)
+            )
+            pass
 
-    def VP_Id_loop(self):
+    def VP_Id_loop(self, type):
         if self.check_next_token("."):
             self.accept_token()
-            self.check_obj=True
-            self.VP()
-        elif self.check_next_token("("):
+            self.check_obj = True
+            self.VP(type)
+        elif self.check_next_token("["):
             self.accept_token()
-            self.is_param_value()
-            if self.check_next_token(")"):
-                self.compatibility_check(self.dt_type.split(">")[1], self.param_type.split(">")[1], "relational")
-                self.param_type=""
+            temp_exp = self.expression
+            self.expression = []
+            self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.compatibility_check(type, temp_type, "relational")
+            self.expression = temp_exp
+            self.dt_type = temp_type
+            # self.expression.append(put_result(temp_type))
+            if self.check_next_token("]"):
                 self.accept_token()
-                self.VP_Id_loop1()
+
+                self.VP_ex_Id(temp_type)
             else:
                 raise ("Exception")
         else:
+            self.expression.append(
+                put_result(type.split("=")[0] if type.__contains__("=>") else type)
+            )
             pass
 
-    def VP_Id_loop1(self):
-        if self.check_next_token("."):
-            self.accept_token()
-            self.check_obj=True
-            self.VP()
-        self.symboltype=self.dt_type.split("=")[0]if self.dt_type.__contains__("=>")else self.dt_type
-        print("dd")
-
-    def func_call_Id_set_class_init(self):
+    def func_call_Id_set_class_init(self, type=None):
         if (
             self.check_next_token("[")
             or self.check_next_token("(")
             or self.check_next_token(".")
         ):
-            self.symboltype = self.check_variable_exist(self.Id)["type"]
-            self.dt_type = self.check_variable_exist(self.Id)["type"]
-            self.OP_ex_Id()
-            self.func_call_Id_set_class_init()
+            # temp_type= self.check_variable_exist(self.Id)["type"]
+            self.OP_ex_Id(type)
+            self.func_call_Id_set_class_init(self.dt_type)
         elif self.check_next_token("="):
-            self.check_variable_exist(self.Id)
+            # self.check_variable_exist(self.Id)
             self.accept_token()
+            self.expression = []
             self.exp()
-            self.compatibility_check(self.type, self.symboltype, "relational")
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.expression = []
+            self.compatibility_check(type, temp_type, "relational")
         elif self.check_next_token_by_class("Id"):
-            self.check_class_exist(self.Id)
+            # self.check_class_exist(self.Id)
             self.type = self.Id
             self.class_init_or_not()
         elif self.check_next_token("++") or self.check_next_token("--"):
-            self.check_variable_exist(self.Id)
+            # self.check_variable_exist(self.Id)
             self.accept_token()
         elif self.check_next_token(";"):
             # self.accept_token()
@@ -1197,6 +1184,7 @@ class Parser:
                         self.accept_token()
                         if self.check_next_token("("):
                             self.accept_token()
+                            self.param_type=""
                             self.is_param_value()
                             if self.check_next_token(")"):
                                 self.lookup_constructor(
@@ -1223,6 +1211,7 @@ class Parser:
 
     def OE(self):
         if self.check_next_token("or"):
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
             self.AE()
             self.OE()
@@ -1235,6 +1224,7 @@ class Parser:
 
     def AE1(self):
         if self.check_next_token("and"):
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
             self.RE()
             self.AE1()
@@ -1250,14 +1240,6 @@ class Parser:
             or self.check_next_token_by_class("Id")
             or self.check_next_token("(")
         ):
-            if self.allTokens[self.token_index]["class"] != "Punctuators":
-                self.symboltype = self.allTokens[self.token_index]["class"]
-                if self.symboltype == "Id":
-                    self.symboltype = self.check_variable_exist(
-                        self.allTokens[self.token_index]["value"]
-                    )["type"]
-                    if self.symboltype.__contains__("=>"):
-                        self.symboltype = self.symboltype.split("=")[0]
             self.value()
             self.T1()
             self.E1()
@@ -1267,6 +1249,7 @@ class Parser:
 
     def RE1(self):
         if self.check_next_token_by_class("RelationalOperators"):
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
             if (
                 self.check_next_token_by_class("string")
@@ -1276,17 +1259,6 @@ class Parser:
                 or self.check_next_token_by_class("Id")
                 or self.check_next_token("(")
             ):
-                if self.allTokens[self.token_index]["class"] != "Punctuators":
-                    sec_symboltype = self.allTokens[self.token_index]["class"]
-                    if sec_symboltype == "Id":
-                        sec_symboltype = self.check_variable_exist(
-                            self.allTokens[self.token_index]["value"]
-                        )["type"]
-                        if sec_symboltype.__contains__("=>"):
-                            sec_symboltype = sec_symboltype.split("=")[0]
-                    self.symboltype = self.compatibility_check(
-                        self.symboltype, sec_symboltype, "relational"
-                    )
                 self.value()
                 self.T1()
                 self.E1()
@@ -1298,34 +1270,14 @@ class Parser:
 
     def E1(self):
         if self.check_next_token("+"):
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
-            if self.allTokens[self.token_index]["class"] != "Punctuators":
-                sec_symboltype = self.allTokens[self.token_index]["class"]
-                if sec_symboltype == "Id":
-                    sec_symboltype = self.check_variable_exist(
-                        self.allTokens[self.token_index]["value"]
-                    )["type"]
-                    if sec_symboltype.__contains__("=>"):
-                        sec_symboltype = sec_symboltype.split("=")[0]
-                self.symboltype = self.compatibility_check(
-                    self.symboltype, sec_symboltype, "+"
-                )
             self.value()
             self.T1()
             self.E1()
         elif self.check_next_token("-"):
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
-            if self.allTokens[self.token_index]["class"] != "Punctuators":
-                sec_symboltype = self.allTokens[self.token_index]["class"]
-                if sec_symboltype == "Id":
-                    sec_symboltype = self.check_variable_exist(
-                        self.allTokens[self.token_index]["value"]
-                    )["type"]
-                    if sec_symboltype.__contains__("=>"):
-                        sec_symboltype = sec_symboltype.split("=")[0]
-                self.symboltype = self.compatibility_check(
-                    self.symboltype, sec_symboltype, "-"
-                )
             self.value()
             self.T1()
             self.E1()
@@ -1334,48 +1286,18 @@ class Parser:
 
     def T1(self):
         if self.check_next_token("*"):
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
-            if self.allTokens[self.token_index]["class"] != "Punctuators":
-                sec_symboltype = self.allTokens[self.token_index]["class"]
-                if sec_symboltype == "Id":
-                    sec_symboltype = self.check_variable_exist(
-                        self.allTokens[self.token_index]["value"]
-                    )["type"]
-                    if sec_symboltype.__contains__("=>"):
-                        sec_symboltype = sec_symboltype.split("=")[0]
-                self.symboltype = self.compatibility_check(
-                    self.symboltype, sec_symboltype, "*"
-                )
             self.value()
             self.T1()
         elif self.check_next_token("/"):
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
-            if self.allTokens[self.token_index]["class"] != "Punctuators":
-                sec_symboltype = self.allTokens[self.token_index]["class"]
-                if sec_symboltype == "Id":
-                    sec_symboltype = self.check_variable_exist(
-                        self.allTokens[self.token_index]["value"]
-                    )["type"]
-                    if sec_symboltype.__contains__("=>"):
-                        sec_symboltype = sec_symboltype.split("=")[0]
-                self.symboltype = self.compatibility_check(
-                    self.symboltype, sec_symboltype, "/"
-                )
             self.value()
             self.T1()
         elif self.check_next_token("%"):
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
-            if self.allTokens[self.token_index]["class"] != "Punctuators":
-                sec_symboltype = self.allTokens[self.token_index]["class"]
-                if sec_symboltype == "Id":
-                    sec_symboltype = self.check_variable_exist(
-                        self.allTokens[self.token_index]["value"]
-                    )["type"]
-                    if sec_symboltype.__contains__("=>"):
-                        sec_symboltype = sec_symboltype.split("=")[0]
-                self.symboltype = self.compatibility_check(
-                    self.symboltype, sec_symboltype, "%"
-                )
             self.value()
             self.T1()
         else:
@@ -1422,6 +1344,7 @@ class Parser:
     def Inter_Dec_Var_func(self):
         if self.check_next_token("("):
             self.accept_token()
+            self.param_type=""
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
@@ -1500,11 +1423,11 @@ class Mt_Scope:
         self.members.append({"id": name, "type": type, "am": am})
         return True
 
-    def declare_constructor(self, name, type, am):
+    def declare_constructor(self, name, type):
         for symbol in self.members:
             if symbol["id"] == name and symbol["type"] == type:
                 return False
-        self.members.append({"id": name, "type": type, "am": am})
+        self.members.append({"id": name, "type": type, "am": None})
         return True
 
     def check_variable(self, name):
