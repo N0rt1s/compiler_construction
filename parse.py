@@ -1052,7 +1052,7 @@ class Parser:
             self.expression = []
             self.exp()
             temp_type = build_expression_tree_with_types(self.expression)
-            self.compatibility_check(type, temp_type, "relational")
+            self.compatibility_check(type.split("[")[0], temp_type, "relational")
             self.expression = temp_exp
             self.dt_type = temp_type
             # self.expression.append(put_result(temp_type))
@@ -1138,7 +1138,7 @@ class Parser:
             self.expression = []
             self.exp()
             temp_type = build_expression_tree_with_types(self.expression)
-            self.compatibility_check(type, temp_type, "relational")
+            self.compatibility_check(type.split("[")[0], temp_type, "relational")
             self.expression = temp_exp
             self.dt_type = temp_type
             # self.expression.append(put_result(temp_type))
