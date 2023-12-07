@@ -67,7 +67,7 @@ class Parser:
         if len(existing_object) == 0:
             raise CustomError(f"The Construct {self.Id} does not exist.")
         else:
-            pass
+            return id
 
     def set_class_parent(self):
         existing_object = list(
@@ -143,6 +143,19 @@ class Parser:
         exists, symbol = existing_class[-1].check_constructor(classId, type)
         if not exists:
             raise CustomError(f"No valid Constructor for class {classId} exist.")
+
+    def object_compatibility(self,typeId ,classId):
+        if typeId!=classId:
+            existing_class = list(
+                filter(lambda x: (x.Id == typeId), self.definition_table)
+            )
+            if len(existing_class)!=0:
+                exists = existing_class[-1].check_parent_compatibility(classId)
+                if not exists:
+                    raise CustomError(f"No valid type class {classId} exist.")
+            else:    
+                raise CustomError(f"No class {classId} exist.")
+            
 
     def compatibility_check(self, typeone, typetwo, operator):
         if typeone == "number" and typetwo == "number":
@@ -289,12 +302,13 @@ class Parser:
                 self.scope.append(St_Scope())
                 self.symbol_table.append(self.scope[-1])
                 self.type = self.Id
-                self.param_type=""
+                self.param_type = ""
                 self.is_params()
                 if self.check_next_token(")"):
                     self.accept_token()
                     self.definition_table[-1].declare_constructor(
-                        self.current_class_scope, self.current_class_scope + self.param_type
+                        self.current_class_scope,
+                        self.current_class_scope + self.param_type,
                     )
                     if self.check_next_token("{"):
                         self.accept_token()
@@ -786,7 +800,7 @@ class Parser:
             self.scope.append(St_Scope())
             self.symbol_table.append(self.scope[-1])
             self.accept_token()
-            self.param_type=""
+            self.param_type = ""
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
@@ -964,7 +978,6 @@ class Parser:
         else:
             raise ("Exception")
 
-
     def OP(self, type=None):
         if self.check_next_token_by_class("Id"):
             temp_type = ""
@@ -1004,7 +1017,7 @@ class Parser:
             self.accept_token()
             temp_exp = self.expression
             self.expression = []
-            self.param_type=""
+            self.param_type = ""
             self.is_param_value()
             if self.check_next_token(")"):
                 self.compatibility_check(
@@ -1090,7 +1103,7 @@ class Parser:
             self.accept_token()
             temp_exp = self.expression
             self.expression = []
-            self.param_type=""
+            self.param_type = ""
             self.is_param_value()
             if self.check_next_token(")"):
                 self.compatibility_check(
@@ -1160,8 +1173,8 @@ class Parser:
             self.compatibility_check(type, temp_type, "relational")
         elif self.check_next_token_by_class("Id"):
             # self.check_class_exist(self.Id)
-            self.type = self.Id
-            self.class_init_or_not()
+            # self.type = self.Id
+            self.class_init_or_not(type)
         elif self.check_next_token("++") or self.check_next_token("--"):
             # self.check_variable_exist(self.Id)
             self.accept_token()
@@ -1171,7 +1184,7 @@ class Parser:
         else:
             raise ("Exception")
 
-    def class_init_or_not(self):
+    def class_init_or_not(self, type):
         if self.check_next_token_by_class("Id"):
             id = self.allTokens[self.token_index]["value"]
             self.accept_token()
@@ -1181,14 +1194,16 @@ class Parser:
                     self.accept_token()
                     if self.check_next_token_by_class("Id"):
                         # self.type=self.allTokens[self.token_index]["value"]
+                        self.object_compatibility(type,self.allTokens[self.token_index]["value"])
+                        temp_Id=self.allTokens[self.token_index]["value"]
                         self.accept_token()
                         if self.check_next_token("("):
                             self.accept_token()
-                            self.param_type=""
+                            self.param_type = ""
                             self.is_param_value()
                             if self.check_next_token(")"):
                                 self.lookup_constructor(
-                                    self.type.split("=")[0], self.type
+                                    temp_Id, temp_Id+self.param_type
                                 )
                                 self.dt_type = self.Id
                                 self.var_Id.append(id)
@@ -1344,7 +1359,7 @@ class Parser:
     def Inter_Dec_Var_func(self):
         if self.check_next_token("("):
             self.accept_token()
-            self.param_type=""
+            self.param_type = ""
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
@@ -1445,6 +1460,14 @@ class Mt_Scope:
         if self.parent is not None:
             return self.parent.check_variable(name)
         return False, {}
+
+    def check_parent_compatibility(self, id):
+        if self.parent is not None:
+            if self.parent.Id != id:
+                return self.parent.check_parent_compatibility(id)
+            return True
+        return False
+        
 
     def get_variable(self, name):
         for symbol in self.symbols:

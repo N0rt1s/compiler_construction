@@ -6,13 +6,13 @@ interface ll{
 }
 
 public class bb{
-    bb(){}
+    bb(string po){}
     public number mm=0;
     public number[] ms=[1];
     
 }
 
-public class aa{
+public class aa:bb{
     private string ml;
     public char ms='a';
     aa(char st,number mm ) { 
@@ -24,7 +24,7 @@ public class aa{
     public bb as(number df) { 
         number asd= (1 + 12 - 78) + (45 + 121);
         number[] ms=[1,23,4];
-        bb aclass = new bb();
+        aa aclass = new bb();
         if(asd==0){
             number mm=4;
             asd=67;
@@ -56,6 +56,14 @@ public class aa{
      }
 }
 
+
+public class cc{
+    public number mm(string lk){
+        aa obj=new bb("xcx");
+    }
+    public number[] ms=[1];
+    
+}
 
 
 public struct as{
