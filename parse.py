@@ -1,4 +1,4 @@
-from semantic import build_expression_tree_with_types, put_result
+from semantic import build_expression_tree_with_types, put_result,CustomError,St_Scope,Mt_Scope
 
 
 class Parser:
@@ -8,7 +8,6 @@ class Parser:
         self.symbol_table = []
         self.definition_table = []
         self.member_table = []
-        self.class_scope = []
         self.current_class_scope = None
         self.scope = []
         self.am = ""
@@ -20,7 +19,6 @@ class Parser:
         self.interface = []
         self.constructors = []
         self.turn = 0
-        self.check_obj = False
         self.param_type = ""
         self.expression = []
 
@@ -45,7 +43,7 @@ class Parser:
     def lookup_mt(self, id):
         exists, symbol = self.definition_table[-1].check_variable(id)
         if not exists:
-            raise CustomError(f"The member {id} does not exist.")
+            raise CustomError(f"The name {id} does not exist.")
         return symbol
 
     def lookup_mt_for_object(self, classId, id):
@@ -58,7 +56,7 @@ class Parser:
         if not exists:
             raise CustomError(f"The member {id} does not exist.")
         elif symbol["am"] == "private":
-            raise CustomError(f"Cannot use private member {id}.")
+            raise CustomError(f"Cannot use private member {id} outside class.")
 
         return symbol
 
@@ -244,8 +242,7 @@ class Parser:
                     self.parent = None
                     self.interface = []
                     if self.check_next_token("{"):
-                        self.class_scope.append(self.Id)
-                        self.current_class_scope = self.class_scope[-1]
+                        self.current_class_scope = self.Id
                         self.accept_token()
                         # self.constructor()
                         self.cst()
@@ -329,10 +326,8 @@ class Parser:
 
     def is_params(self):
         if self.check_next_token(")"):
-            # self.accept_token()
             pass
         else:
-            self.type += "=>"
             self.param_type += "=>"
             self.parameters()
 
@@ -348,12 +343,10 @@ class Parser:
 
     def dt_or_id(self):
         if self.check_next_token_by_class("DataType"):
-            self.type += self.allTokens[self.token_index]["value"]
             self.param_type += self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("Id"):
-            self.type += self.allTokens[self.token_index]["value"]
             self.param_type += self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
@@ -362,7 +355,6 @@ class Parser:
 
     def more_params(self):
         if self.check_next_token(","):
-            self.type += ","
             self.param_type += ","
             self.accept_token()
             self.parameters()
@@ -371,7 +363,6 @@ class Parser:
 
     def cst(self):
         if self.check_next_token("}"):
-            # self.accept_token()
             pass
         elif self.check_next_token_by_class("Id"):
             self.constructor()
@@ -904,16 +895,16 @@ class Parser:
 
     def const(self):
         if self.check_next_token_by_class("string"):
-            self.expression.append(put_result("string"))
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
         elif self.check_next_token_by_class("char"):
-            self.expression.append(put_result("char"))
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
         elif self.check_next_token_by_class("bool"):
-            self.expression.append(put_result("bool"))
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
         elif self.check_next_token_by_class("number"):
-            self.expression.append(put_result("number"))
+            self.expression.append(self.allTokens[self.token_index]["value"])
             self.accept_token()
         # elif self.check_next_token("["):
         #     self.arrConst()
@@ -978,10 +969,10 @@ class Parser:
         else:
             raise ("Exception")
 
-    def OP(self, type=None):
+    def OP(self, type=None,check_obj=False):
         if self.check_next_token_by_class("Id"):
             temp_type = ""
-            if self.check_obj:
+            if check_obj:
                 temp_type = self.lookup_mt_for_object(
                     type.split("=")[0] if type.__contains__("=>") else type,
                     self.allTokens[self.token_index]["value"],
@@ -990,7 +981,6 @@ class Parser:
                 temp_type = self.check_variable_exist(
                     self.allTokens[self.token_index]["value"]
                 )["type"]
-            self.check_obj = False
 
             self.accept_token()
             self.OP_ex_Id(temp_type)
@@ -1033,8 +1023,7 @@ class Parser:
                 raise ("Exception")
         elif self.check_next_token("."):
             self.accept_token()
-            self.check_obj = True
-            self.OP(type)
+            self.OP(type,True)
         else:
             self.expression.append(
                 put_result(type.split("=")[0] if type.__contains__("=>") else type)
@@ -1044,8 +1033,7 @@ class Parser:
     def OP_Id_loop(self, type):
         if self.check_next_token("."):
             self.accept_token()
-            self.check_obj = True
-            self.OP(type)
+            self.OP(type,True)
         elif self.check_next_token("["):
             self.accept_token()
             temp_exp = self.expression
@@ -1064,10 +1052,10 @@ class Parser:
         else:
             raise ("Exception")
 
-    def VP(self, type=None):
+    def VP(self, type=None,check_obj=False):
         if self.check_next_token_by_class("Id"):
             temp_type = ""
-            if self.check_obj:
+            if check_obj:
                 temp_type = self.lookup_mt_for_object(
                     type.split("=")[0] if type.__contains__("=>") else type,
                     self.allTokens[self.token_index]["value"],
@@ -1076,7 +1064,6 @@ class Parser:
                 temp_type = self.check_variable_exist(
                     self.allTokens[self.token_index]["value"]
                 )["type"]
-            self.check_obj = False
 
             self.accept_token()
             self.VP_ex_Id(temp_type)
@@ -1119,8 +1106,7 @@ class Parser:
                 raise ("Exception")
         elif self.check_next_token("."):
             self.accept_token()
-            self.check_obj = True
-            self.VP(type)
+            self.VP(type,False)
         else:
             self.expression.append(
                 put_result(type.split("=")[0] if type.__contains__("=>") else type)
@@ -1130,8 +1116,7 @@ class Parser:
     def VP_Id_loop(self, type):
         if self.check_next_token("."):
             self.accept_token()
-            self.check_obj = True
-            self.VP(type)
+            self.VP(type,False)
         elif self.check_next_token("["):
             self.accept_token()
             temp_exp = self.expression
@@ -1385,97 +1370,6 @@ class Parser:
                 raise Exception("Invalid")
         else:
             pass
-
-
-#######################################################################################################
-#######################################################################################################
-class CustomError(Exception):
-    pass
-
-
-class St_Scope:
-    def __init__(self, parent=None):
-        self.symbols = []
-        self.parent = parent
-
-    def declare_variable(self, name, type):
-        for symbol in self.symbols:
-            if symbol["id"] == name:
-                return False
-        self.symbols.append({"id": name, "type": type})
-        return True
-
-    def check_variable(self, name):
-        for symbol in self.symbols:
-            if symbol["id"] == name:
-                return True, symbol
-        if self.parent is not None:
-            return self.parent.check_variable(name)
-        return False, {}
-
-    def get_variable(self, name):
-        for symbol in self.symbols:
-            if symbol["id"] == name:
-                return symbol
-        if self.parent is not None:
-            return self.parent.get_variable(name)
-        return False
-
-
-class Mt_Scope:
-    def __init__(self, Id, type, am, parent=None, interfaces=[]):
-        self.members = []
-        self.Id = Id
-        self.am = am
-        self.type = type
-        self.parent = parent
-        self.interfaces = interfaces
-
-    def declare_variable(self, name, type, am):
-        for symbol in self.members:
-            if symbol["id"] == name:
-                return False
-        self.members.append({"id": name, "type": type, "am": am})
-        return True
-
-    def declare_constructor(self, name, type):
-        for symbol in self.members:
-            if symbol["id"] == name and symbol["type"] == type:
-                return False
-        self.members.append({"id": name, "type": type, "am": None})
-        return True
-
-    def check_variable(self, name):
-        for symbol in self.members:
-            if symbol["id"] == name:
-                return True, symbol
-        if self.parent is not None:
-            return self.parent.check_variable(name)
-        return False, {}
-
-    def check_constructor(self, name, type):
-        for symbol in self.members:
-            if symbol["id"] == name and symbol["type"] == type:
-                return True, symbol
-        if self.parent is not None:
-            return self.parent.check_variable(name)
-        return False, {}
-
-    def check_parent_compatibility(self, id):
-        if self.parent is not None:
-            if self.parent.Id != id:
-                return self.parent.check_parent_compatibility(id)
-            return True
-        return False
-        
-
-    def get_variable(self, name):
-        for symbol in self.symbols:
-            if symbol["id"] == name:
-                return symbol
-        if self.parent is not None:
-            return self.parent.get_variable(name)
-        return False
 
 
 # sqlite3 your_database.db

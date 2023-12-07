@@ -10,6 +10,7 @@ public class bb{
     public number mm=0;
     public number[] ms=[1];
     private number lp(){
+        bool kl=2==4+9;
         ms[0][5+0][89]=45;
     }
     
@@ -19,7 +20,7 @@ public class aa:bb{
     private string ml;
     public char ms='a';
     aa(char st,number mm ) { 
-        ml="1jfnajs";
+        mm=0;
     }
     aa() { 
         ml="1jfnajs";

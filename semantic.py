@@ -2,6 +2,93 @@ import re
 
 precedence = {'(': 0, ')': 0, '==': 1, '!=': 1, '<=': 2, '>=': 2, '<': 2, '>': 2, 'or': 3, 'and': 4, '+': 5, '-': 5, '*': 6, '/': 6,'%': 6}
     
+class CustomError(Exception):
+    pass
+
+
+class St_Scope:
+    def __init__(self, parent=None):
+        self.symbols = []
+        self.parent = parent
+
+    def declare_variable(self, name, type):
+        for symbol in self.symbols:
+            if symbol["id"] == name:
+                return False
+        self.symbols.append({"id": name, "type": type})
+        return True
+
+    def check_variable(self, name):
+        for symbol in self.symbols:
+            if symbol["id"] == name:
+                return True, symbol
+        if self.parent is not None:
+            return self.parent.check_variable(name)
+        return False, {}
+
+    def get_variable(self, name):
+        for symbol in self.symbols:
+            if symbol["id"] == name:
+                return symbol
+        if self.parent is not None:
+            return self.parent.get_variable(name)
+        return False
+
+
+class Mt_Scope:
+    def __init__(self, Id, type, am, parent=None, interfaces=[]):
+        self.members = []
+        self.Id = Id
+        self.am = am
+        self.type = type
+        self.parent = parent
+        self.interfaces = interfaces
+
+    def declare_variable(self, name, type, am):
+        for symbol in self.members:
+            if symbol["id"] == name:
+                return False
+        self.members.append({"id": name, "type": type, "am": am})
+        return True
+
+    def declare_constructor(self, name, type):
+        for symbol in self.members:
+            if symbol["id"] == name and symbol["type"] == type:
+                return False
+        self.members.append({"id": name, "type": type, "am": None})
+        return True
+
+    def check_variable(self, name):
+        for symbol in self.members:
+            if symbol["id"] == name:
+                return True, symbol
+        if self.parent is not None:
+            return self.parent.check_variable(name)
+        return False, {}
+
+    def check_constructor(self, name, type):
+        for symbol in self.members:
+            if symbol["id"] == name and symbol["type"] == type:
+                return True, symbol
+        if self.parent is not None:
+            return self.parent.check_variable(name)
+        return False, {}
+
+    def check_parent_compatibility(self, id):
+        if self.parent is not None:
+            if self.parent.Id != id:
+                return self.parent.check_parent_compatibility(id)
+            return True
+        return False
+        
+
+    def get_variable(self, name):
+        for symbol in self.symbols:
+            if symbol["id"] == name:
+                return symbol
+        if self.parent is not None:
+            return self.parent.get_variable(name)
+        return False
 
 
 class Node:
@@ -103,9 +190,9 @@ def put_result(ty):
     if(ty=="number"):
         return "0"
     if(ty=="char"):
-        return "'a'"
+        return "''"
     if(ty=="string"):
-        return '"a"'
+        return '""'
     if(ty=="bool"):
         return "true"
 
