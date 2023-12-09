@@ -19,7 +19,6 @@ class Parser:
         self.am = ""
         self.Id = ""
         self.var_Id = []
-        self.type = ""
         self.dt_type = ""
         self.parent = None
         self.interface = []
@@ -117,16 +116,16 @@ class Parser:
                     raise CustomError(f"The variable {item} already Declared.")
             self.var_Id = []
 
-    def insert_dt(self):
+    def insert_dt(self,id,type,am,parent=None,interface=[]):
         if self.turn == 0:
             existing_object = list(
-                filter(lambda x: x.Id == self.Id, self.definition_table)
+                filter(lambda x: x.Id == id, self.definition_table)
             )
             if len(existing_object) != 0:
-                raise CustomError(f"The Construct {self.Id} already exists.")
+                raise CustomError(f"The Construct {id} already exists.")
             else:
                 self.definition_table.append(
-                    Mt_Scope(self.Id, self.type, self.am, self.parent, self.interface)
+                    Mt_Scope(id, type, am, parent, interface)
                 )
                 self.am = ""
 
@@ -160,17 +159,9 @@ class Parser:
             else:
                 raise CustomError(f"No class {classId} exist.")
 
-    def compatibility_check(self, typeone, typetwo, operator):
-        if typeone == "number" and typetwo == "number":
-            return "number"
-        elif typeone == "string" and typetwo == "char" and operator == "+":
-            return "string"
-        elif typeone == "string" and typetwo == "string" and operator == "+":
-            return "string"
-        elif typeone == "char" and typetwo == "char" and operator == "+":
-            return "string"
-        elif typeone == typetwo and operator == "relational":
-            return "bool"
+    def compatibility_check(self, typeone, typetwo):
+        if typeone == typetwo:
+            return True
         else:
             raise CustomError("Type Missmatch!")
 
@@ -232,24 +223,24 @@ class Parser:
 
     def interface_class_struct_dec(self):
         if self.check_next_token("interface"):
-            self.type = "interface"
             self.Interface_dec()
         else:
             self.acces_specifiers()
             if self.check_next_token("class"):
-                self.type = "class"
                 self.accept_token()
                 if self.check_next_token_by_class("Id"):
                     self.Id = self.allTokens[self.token_index]["value"]
+                    temp_id=self.allTokens[self.token_index]["value"]
                     self.accept_token()
-                    self.derived()
-                    self.insert_dt()
-                    self.parent = None
                     self.interface = []
+                    self.parent = None
+                    self.derived()
+                    self.insert_dt(temp_id,"class",self.am,self.parent,self.interface)
+                    self.interface = []
+                    self.parent = None
                     if self.check_next_token("{"):
                         self.current_class_scope = self.Id
                         self.accept_token()
-                        # self.constructor()
                         self.cst()
                         if self.check_next_token("}"):
                             self.definition_table[-1].declare_constructor(
@@ -263,7 +254,6 @@ class Parser:
                 else:
                     raise ("Exeption")
             elif self.check_next_token("struct"):
-                self.type = "struct"
                 self.accept_token()
                 self.struct()
             else:
@@ -303,7 +293,6 @@ class Parser:
                 self.accept_token()
                 self.scope.append(St_Scope())
                 self.symbol_table.append(self.scope[-1])
-                self.type = self.Id
                 self.param_type = ""
                 self.is_params()
                 if self.check_next_token(")"):
@@ -375,7 +364,6 @@ class Parser:
         else:
             self.acces_specifiers()
             if self.check_next_token("struct"):
-                self.type = "struct"
                 self.accept_token()
                 self.struct()
                 self.cst()
@@ -418,15 +406,12 @@ class Parser:
 
     def dt(self):
         if self.check_next_token_by_class("DataType"):
-            #self.type = self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("ArrayDataType"):
-            #self.type = self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("Id"):
-            #self.type = self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         else:
@@ -465,7 +450,7 @@ class Parser:
                 self.exp()
                 temp_type = build_expression_tree_with_types(self.expression)
                 self.expression = []
-                self.compatibility_check(self.dt_type, temp_type, "relational")
+                self.compatibility_check(self.dt_type, temp_type)
             else:
                 raise ("Exception")
         else:
@@ -528,7 +513,7 @@ class Parser:
             self.expression = []
             self.exp()
             temp_type = build_expression_tree_with_types(self.expression)
-            self.compatibility_check("bool", temp_type, "relational")
+            self.compatibility_check("bool", temp_type)
             self.expression = []
             if self.check_next_token(")"):
                 self.accept_token()
@@ -566,7 +551,7 @@ class Parser:
                 self.expression = []
                 self.exp()
                 temp_type = build_expression_tree_with_types(self.expression)
-                self.compatibility_check("bool", temp_type, "relational")
+                self.compatibility_check("bool", temp_type)
                 self.expression = []
                 if self.check_next_token(")"):
                     self.accept_token()
@@ -652,7 +637,7 @@ class Parser:
                 self.expression = []
                 self.exp()
                 temp_type = build_expression_tree_with_types(self.expression)
-                self.compatibility_check("bool", temp_type, "relational")
+                self.compatibility_check("bool", temp_type)
                 self.expression = []
                 if self.check_next_token(")"):
                     self.accept_token()
@@ -778,10 +763,11 @@ class Parser:
     def struct(self):
         if self.check_next_token_by_class("Id"):
             self.Id = self.allTokens[self.token_index]["value"]
+            temp_id = self.allTokens[self.token_index]["value"]
             self.accept_token()
             if self.check_next_token("{"):
                 self.parent = None
-                self.insert_dt()
+                self.insert_dt(temp_id,"struct",self.am)
                 self.accept_token()
                 self.sst()
                 if self.check_next_token("}"):
@@ -1001,7 +987,7 @@ class Parser:
             self.expression = []
             self.exp()
             temp_type = build_expression_tree_with_types(self.expression)
-            self.compatibility_check(type.split("[")[0], temp_type, "relational")
+            self.compatibility_check(type.split("[")[0], temp_type)
             self.expression = temp_exp
             self.dt_type = temp_type
             # self.expression.append(put_result(temp_type))
@@ -1018,7 +1004,7 @@ class Parser:
             self.is_param_value()
             if self.check_next_token(")"):
                 self.compatibility_check(
-                    type.split(">")[1], self.param_type.split(">")[1], "relational"
+                    type.split(">")[1], self.param_type.split(">")[1]
                 )
                 self.expression = temp_exp
                 # self.dt_type = temp_type
@@ -1047,7 +1033,7 @@ class Parser:
             self.expression = []
             self.exp()
             temp_type = build_expression_tree_with_types(self.expression)
-            self.compatibility_check(type.split("[")[0], temp_type, "relational")
+            self.compatibility_check(type.split("[")[0], temp_type)
             self.expression = temp_exp
             self.dt_type = temp_type
             # self.expression.append(put_result(temp_type))
@@ -1084,7 +1070,7 @@ class Parser:
             self.expression = []
             self.exp()
             temp_type = build_expression_tree_with_types(self.expression)
-            self.compatibility_check(type.split("[")[0], temp_type, "relational")
+            self.compatibility_check(type.split("[")[0], temp_type)
             self.expression = temp_exp
             self.dt_type = temp_type
             # self.expression.append(put_result(temp_type))
@@ -1101,7 +1087,7 @@ class Parser:
             self.is_param_value()
             if self.check_next_token(")"):
                 self.compatibility_check(
-                    type.split(">")[1], self.param_type.split(">")[1], "relational"
+                    type.split(">")[1], self.param_type.split(">")[1]
                 )
                 self.expression = temp_exp
                 # self.dt_type = temp_type
@@ -1130,7 +1116,7 @@ class Parser:
             self.expression = []
             self.exp()
             temp_type = build_expression_tree_with_types(self.expression)
-            self.compatibility_check(type.split("[")[0], temp_type, "relational")
+            self.compatibility_check(type.split("[")[0], temp_type)
             self.expression = temp_exp
             self.dt_type = temp_type
             # self.expression.append(put_result(temp_type))
@@ -1162,7 +1148,7 @@ class Parser:
             self.exp()
             temp_type = build_expression_tree_with_types(self.expression)
             self.expression = []
-            self.compatibility_check(type, temp_type, "relational")
+            self.compatibility_check(type, temp_type)
         elif self.check_next_token_by_class("Id"):
             self.class_init_or_not(type)
         elif self.check_next_token("++") or self.check_next_token("--"):
@@ -1314,10 +1300,11 @@ class Parser:
             self.accept_token()
             if self.check_next_token_by_class("Id"):
                 self.Id = self.allTokens[self.token_index]["value"]
+                temp_id = self.allTokens[self.token_index]["value"]
                 self.accept_token()
                 if self.check_next_token("{"):
                     self.accept_token()
-                    self.insert_dt()
+                    self.insert_dt(temp_id,"interface","public")
                     self.IST()
                     if self.check_next_token("}"):
                         self.accept_token()
