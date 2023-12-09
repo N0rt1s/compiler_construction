@@ -1,8 +1,8 @@
 ??1+5/-.232(-7+9.232)
 ??mm="afas";
 interface ll{
-    public char s,adsl,xc,asda;
-    public char my();
+    char s,adsl,xc,asda;
+    char my();
 }
 
 public class bb{
@@ -15,7 +15,6 @@ public class bb{
     }
     
 }
-?*
 public class aa:bb{
     private string ml;
     public char ms='a';
@@ -53,7 +52,7 @@ public class aa:bb{
     }
     public number lll( ) { 
         number asd= (1 + 12 - 78) / (23 + 121);
-        asd=as(9).mm+(4-9);
+        asd=as(9).lp+(4-9);
         for(number i= 30+32 ; 232<12;i++){
             asd++;
         }
@@ -73,4 +72,4 @@ public class cc{
 public struct as{
     private char pol='a';
     public number pok=23;
-}*?
+}

@@ -1,4 +1,10 @@
-from semantic import build_expression_tree_with_types, put_result,CustomError,St_Scope,Mt_Scope
+from semantic import (
+    build_expression_tree_with_types,
+    put_result,
+    CustomError,
+    St_Scope,
+    Mt_Scope,
+)
 
 
 class Parser:
@@ -124,10 +130,10 @@ class Parser:
                 )
                 self.am = ""
 
-    def insert_mt(self):
+    def insert_mt(self, id="", type="", am=""):
         if self.turn == 0:
             inserted = self.definition_table[-1].declare_variable(
-                self.Id, self.type, self.am
+                id, type, am
             )
             self.am = ""
 
@@ -142,18 +148,17 @@ class Parser:
         if not exists:
             raise CustomError(f"No valid Constructor for class {classId} exist.")
 
-    def object_compatibility(self,typeId ,classId):
-        if typeId!=classId:
+    def object_compatibility(self, typeId, classId):
+        if typeId != classId:
             existing_class = list(
                 filter(lambda x: (x.Id == typeId), self.definition_table)
             )
-            if len(existing_class)!=0:
+            if len(existing_class) != 0:
                 exists = existing_class[-1].check_parent_compatibility(classId)
                 if not exists:
                     raise CustomError(f"No valid type class {classId} exist.")
-            else:    
+            else:
                 raise CustomError(f"No class {classId} exist.")
-            
 
     def compatibility_check(self, typeone, typetwo, operator):
         if typeone == "number" and typetwo == "number":
@@ -378,8 +383,9 @@ class Parser:
                 self.dt()
                 if self.check_next_token_by_class("Id"):
                     self.Id = self.allTokens[self.token_index]["value"]
+                    temp_id = self.allTokens[self.token_index]["value"]
                     self.accept_token()
-                    self.Dec_Var_func()
+                    self.Dec_Var_func(temp_id)
                     self.cst()
                 else:
                     raise ("Exception")
@@ -393,8 +399,9 @@ class Parser:
             self.dt()
             if self.check_next_token_by_class("Id"):
                 self.Id = self.allTokens[self.token_index]["value"]
+                temp_type = self.allTokens[self.token_index]["value"]
                 self.accept_token()
-                self.Dec_Var_func()
+                self.Dec_Var_func(temp_type)
                 self.sst()
             else:
                 raise ("Exception")
@@ -411,15 +418,15 @@ class Parser:
 
     def dt(self):
         if self.check_next_token_by_class("DataType"):
-            self.type = self.allTokens[self.token_index]["value"]
+            #self.type = self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("ArrayDataType"):
-            self.type = self.allTokens[self.token_index]["value"]
+            #self.type = self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("Id"):
-            self.type = self.allTokens[self.token_index]["value"]
+            #self.type = self.allTokens[self.token_index]["value"]
             self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         else:
@@ -786,7 +793,7 @@ class Parser:
         else:
             raise ("Exception")
 
-    def Dec_Var_func(self):
+    def Dec_Var_func(self, id):
         if self.check_next_token("("):
             self.scope.append(St_Scope())
             self.symbol_table.append(self.scope[-1])
@@ -795,7 +802,7 @@ class Parser:
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
-                self.insert_mt()
+                self.insert_mt(id, self.dt_type + self.param_type, self.am)
                 if self.check_next_token("{"):
                     self.accept_token()
                     self.MST()
@@ -812,11 +819,11 @@ class Parser:
             self.put_value()
             if self.check_next_token(";"):
                 self.accept_token()
-                self.insert_mt()
+                self.insert_mt(id,self.dt_type,self.am)
             else:
                 raise ("Exception")
         elif self.check_next_token(";"):
-            self.insert_mt()
+            self.insert_mt(id,self.dt_type,self.am)
             self.accept_token()
 
     def Dec(self):
@@ -969,7 +976,7 @@ class Parser:
         else:
             raise ("Exception")
 
-    def OP(self, type=None,check_obj=False):
+    def OP(self, type=None, check_obj=False):
         if self.check_next_token_by_class("Id"):
             temp_type = ""
             if check_obj:
@@ -1023,7 +1030,7 @@ class Parser:
                 raise ("Exception")
         elif self.check_next_token("."):
             self.accept_token()
-            self.OP(type,True)
+            self.OP(type, True)
         else:
             self.expression.append(
                 put_result(type.split("=")[0] if type.__contains__("=>") else type)
@@ -1033,7 +1040,7 @@ class Parser:
     def OP_Id_loop(self, type):
         if self.check_next_token("."):
             self.accept_token()
-            self.OP(type,True)
+            self.OP(type, True)
         elif self.check_next_token("["):
             self.accept_token()
             temp_exp = self.expression
@@ -1052,7 +1059,7 @@ class Parser:
         else:
             raise ("Exception")
 
-    def VP(self, type=None,check_obj=False):
+    def VP(self, type=None, check_obj=False):
         if self.check_next_token_by_class("Id"):
             temp_type = ""
             if check_obj:
@@ -1106,7 +1113,7 @@ class Parser:
                 raise ("Exception")
         elif self.check_next_token("."):
             self.accept_token()
-            self.VP(type,False)
+            self.VP(type, False)
         else:
             self.expression.append(
                 put_result(type.split("=")[0] if type.__contains__("=>") else type)
@@ -1116,7 +1123,7 @@ class Parser:
     def VP_Id_loop(self, type):
         if self.check_next_token("."):
             self.accept_token()
-            self.VP(type,False)
+            self.VP(type, False)
         elif self.check_next_token("["):
             self.accept_token()
             temp_exp = self.expression
@@ -1157,8 +1164,6 @@ class Parser:
             self.expression = []
             self.compatibility_check(type, temp_type, "relational")
         elif self.check_next_token_by_class("Id"):
-            # self.check_class_exist(self.Id)
-            # self.type = self.Id
             self.class_init_or_not(type)
         elif self.check_next_token("++") or self.check_next_token("--"):
             # self.check_variable_exist(self.Id)
@@ -1178,9 +1183,10 @@ class Parser:
                 if self.check_next_token("new"):
                     self.accept_token()
                     if self.check_next_token_by_class("Id"):
-                        # self.type=self.allTokens[self.token_index]["value"]
-                        self.object_compatibility(type,self.allTokens[self.token_index]["value"])
-                        temp_Id=self.allTokens[self.token_index]["value"]
+                        self.object_compatibility(
+                            type, self.allTokens[self.token_index]["value"]
+                        )
+                        temp_Id = self.allTokens[self.token_index]["value"]
                         self.accept_token()
                         if self.check_next_token("("):
                             self.accept_token()
@@ -1188,7 +1194,7 @@ class Parser:
                             self.is_param_value()
                             if self.check_next_token(")"):
                                 self.lookup_constructor(
-                                    temp_Id, temp_Id+self.param_type
+                                    temp_Id, temp_Id + self.param_type
                                 )
                                 self.dt_type = self.Id
                                 self.var_Id.append(id)
@@ -1329,43 +1335,45 @@ class Parser:
             # self.accept_token()
             pass
         else:
-            self.acces_specifiers()
+            # self.acces_specifiers()
             self.dt()
             if self.check_next_token_by_class("Id"):
                 self.Id = self.allTokens[self.token_index]["value"]
+                temp_id = self.allTokens[self.token_index]["value"]
                 self.accept_token()
-                self.Inter_Dec_Var_func()
+                self.Inter_Dec_Var_func(temp_id)
                 if self.check_next_token(";"):
                     self.accept_token()
                     self.IST()
             else:
                 raise Exception("Invalid")
 
-    def Inter_Dec_Var_func(self):
+    def Inter_Dec_Var_func(self,id):
         if self.check_next_token("("):
             self.accept_token()
             self.param_type = ""
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
-                self.insert_mt()
+                self.insert_mt(id,self.dt_type+self.param_type)
             else:
                 raise Exception("Invalid")
         elif self.check_next_token(","):
-            self.I_List()
+            self.I_List(id)
         elif self.check_next_token(";"):
             pass
         else:
             raise Exception("Invalid")
 
-    def I_List(self):
-        self.insert_mt()
+    def I_List(self,id):
+        self.insert_mt(id,self.dt_type)
         if self.check_next_token(","):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
                 self.Id = self.allTokens[self.token_index]["value"]
+                temp_id= self.allTokens[self.token_index]["value"]
                 self.accept_token()
-                self.I_List()
+                self.I_List(temp_id)
             else:
                 raise Exception("Invalid")
         else:
