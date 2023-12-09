@@ -6,7 +6,7 @@ class tokenization:
         self.patterns = [
             (r"#", "importer"),
             (
-                r"\b(for|public|private|static|class|function|struct|new|return|break|continue|if|elif|else|while|for|forEach|in|switch|case|import)\b",
+                r"\b(for|public|private|static|class|function|struct|new|return|break|continue|if|elif|else|while|for|forEach|in|switch|case|import|abstract|override)\b",
                 "KeyWord",
             ),
             (r"\s*(number\[\]|char\[\]|bool\[\]|string\[\])\s*", "ArrayDataType"),

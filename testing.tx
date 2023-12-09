@@ -1,5 +1,22 @@
 ??1+5/-.232(-7+9.232)
 ??mm="afas";
+
+public abstract class cc{
+    public number[] ms=[1];
+    public abstract number mm(string lk);
+    public string ll(){
+        ??mm("Asdsa");
+    } 
+    
+}
+
+public class mm:cc{
+    public number[] ms=[1];
+    public override number mm(string lk){}
+    
+}
+
+?*
 interface ll{
     char s,adsl,xc,asda;
     char my();
@@ -60,16 +77,7 @@ public class aa:bb{
 }
 
 
-public class cc{
-    public number mm(string lk){
-        aa obj=new bb("xcx");
-    }
-    public number[] ms=[1];
-    
-}
-
-
 public struct as{
     private char pol='a';
     public number pok=23;
-}
+}*?

@@ -26,29 +26,21 @@ class St_Scope:
             return self.parent.check_variable(name)
         return False, {}
 
-    def get_variable(self, name):
-        for symbol in self.symbols:
-            if symbol["id"] == name:
-                return symbol
-        if self.parent is not None:
-            return self.parent.get_variable(name)
-        return False
-
-
 class Mt_Scope:
-    def __init__(self, Id, type, am, parent=None, interfaces=[]):
+    def __init__(self, Id, type, am, parent=None,isabstract=False, interfaces=[]):
         self.members = []
         self.Id = Id
         self.am = am
         self.type = type
         self.parent = parent
+        self.is_abstract = isabstract
         self.interfaces = interfaces
 
-    def declare_variable(self, name, type, am):
+    def declare_variable(self, name, type, am,is_abstract=False):
         for symbol in self.members:
             if symbol["id"] == name:
                 return False
-        self.members.append({"id": name, "type": type, "am": am})
+        self.members.append({"id": name, "type": type, "am": am,"abstract":is_abstract})
         return True
 
     def declare_constructor(self, name, type):
@@ -58,9 +50,17 @@ class Mt_Scope:
         self.members.append({"id": name, "type": type, "am": None})
         return True
 
+    def check_override_method(self, name, type):
+        if self.parent is not None:
+            for symbol in self.parent.members:
+                if symbol["id"] == name and symbol["type"] == type:
+                    return True#,symbol
+            return self.parent.check_override_method()
+        return False#,{}    
+
     def check_variable(self, name):
         for symbol in self.members:
-            if symbol["id"] == name:
+            if symbol["id"] == name :
                 return True, symbol
         if self.parent is not None:
             return self.parent.check_variable(name)
@@ -81,14 +81,6 @@ class Mt_Scope:
             return True
         return False
         
-
-    def get_variable(self, name):
-        for symbol in self.symbols:
-            if symbol["id"] == name:
-                return symbol
-        if self.parent is not None:
-            return self.parent.get_variable(name)
-        return False
 
 
 class Node:

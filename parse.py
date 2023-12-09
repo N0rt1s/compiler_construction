@@ -49,6 +49,8 @@ class Parser:
         exists, symbol = self.definition_table[-1].check_variable(id)
         if not exists:
             raise CustomError(f"The name {id} does not exist.")
+        if symbol["abstract"]:
+            raise CustomError(f"Cannot call abstract method {id}")
         return symbol
 
     def lookup_mt_for_object(self, classId, id):
@@ -70,6 +72,8 @@ class Parser:
         if len(existing_object) == 0:
             raise CustomError(f"The Construct {self.Id} does not exist.")
         else:
+            if existing_object[0].is_abstract:
+                raise CustomError(f"Cannot create Object for absract class {id}.")
             return id
 
     def set_class_parent(self):
@@ -116,24 +120,20 @@ class Parser:
                     raise CustomError(f"The variable {item} already Declared.")
             self.var_Id = []
 
-    def insert_dt(self,id,type,am,parent=None,interface=[]):
+    def insert_dt(self, id, type, am, parent=None, abstract=False, interface=[]):
         if self.turn == 0:
-            existing_object = list(
-                filter(lambda x: x.Id == id, self.definition_table)
-            )
+            existing_object = list(filter(lambda x: x.Id == id, self.definition_table))
             if len(existing_object) != 0:
                 raise CustomError(f"The Construct {id} already exists.")
             else:
                 self.definition_table.append(
-                    Mt_Scope(id, type, am, parent, interface)
+                    Mt_Scope(id, type, am, parent, abstract, interface)
                 )
                 self.am = ""
 
-    def insert_mt(self, id="", type="", am=""):
+    def insert_mt(self, id="", type="", am="",abstract=False):
         if self.turn == 0:
-            inserted = self.definition_table[-1].declare_variable(
-                id, type, am
-            )
+            inserted = self.definition_table[-1].declare_variable(id, type, am,abstract)
             self.am = ""
 
             if not inserted:
@@ -226,22 +226,25 @@ class Parser:
             self.Interface_dec()
         else:
             self.acces_specifiers()
+            abstract = self.isabstract()
             if self.check_next_token("class"):
                 self.accept_token()
                 if self.check_next_token_by_class("Id"):
                     self.Id = self.allTokens[self.token_index]["value"]
-                    temp_id=self.allTokens[self.token_index]["value"]
+                    temp_id = self.allTokens[self.token_index]["value"]
                     self.accept_token()
                     self.interface = []
                     self.parent = None
                     self.derived()
-                    self.insert_dt(temp_id,"class",self.am,self.parent,self.interface)
+                    self.insert_dt(
+                        temp_id, "class", self.am, self.parent, abstract, self.interface
+                    )
                     self.interface = []
                     self.parent = None
                     if self.check_next_token("{"):
                         self.current_class_scope = self.Id
                         self.accept_token()
-                        self.cst()
+                        self.cst(abstract)
                         if self.check_next_token("}"):
                             self.definition_table[-1].declare_constructor(
                                 self.current_class_scope, self.current_class_scope
@@ -355,26 +358,35 @@ class Parser:
         else:
             pass
 
-    def cst(self):
+    def cst(self, is_abstract=False):
         if self.check_next_token("}"):
             pass
         elif self.check_next_token_by_class("Id"):
             self.constructor()
-            self.cst()
+            self.cst(is_abstract)
         else:
             self.acces_specifiers()
             if self.check_next_token("struct"):
                 self.accept_token()
                 self.struct()
-                self.cst()
+                self.cst(is_abstract)
             else:
+                abstract=override=False
+                if is_abstract:
+                    abstract = self.isabstract()
+                    if not abstract:
+                        override = self.isoverride()
+                else:
+                    override = self.isoverride()
+                    if self.check_next_token("abstract"):
+                        raise CustomError("Only abstract class can have abstract methods")
                 self.dt()
                 if self.check_next_token_by_class("Id"):
                     self.Id = self.allTokens[self.token_index]["value"]
                     temp_id = self.allTokens[self.token_index]["value"]
                     self.accept_token()
-                    self.Dec_Var_func(temp_id)
-                    self.cst()
+                    self.Dec_Var_func(temp_id, abstract, override)
+                    self.cst(is_abstract)
                 else:
                     raise ("Exception")
 
@@ -393,6 +405,20 @@ class Parser:
                 self.sst()
             else:
                 raise ("Exception")
+
+    def isabstract(self):
+        if self.check_next_token("abstract"):
+            self.accept_token()
+            return True
+        else:
+            return False
+
+    def isoverride(self):
+        if self.check_next_token("override"):
+            self.accept_token()
+            return True
+        else:
+            return False
 
     def acces_specifiers(self):
         if self.check_next_token("public"):
@@ -767,7 +793,7 @@ class Parser:
             self.accept_token()
             if self.check_next_token("{"):
                 self.parent = None
-                self.insert_dt(temp_id,"struct",self.am)
+                self.insert_dt(temp_id, "struct", self.am)
                 self.accept_token()
                 self.sst()
                 if self.check_next_token("}"):
@@ -779,7 +805,7 @@ class Parser:
         else:
             raise ("Exception")
 
-    def Dec_Var_func(self, id):
+    def Dec_Var_func(self, id, is_abstract=False, is_override=False):
         if self.check_next_token("("):
             self.scope.append(St_Scope())
             self.symbol_table.append(self.scope[-1])
@@ -788,28 +814,46 @@ class Parser:
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
-                self.insert_mt(id, self.dt_type + self.param_type, self.am)
-                if self.check_next_token("{"):
-                    self.accept_token()
-                    self.MST()
-                    if self.check_next_token("}"):
-                        self.scope.pop()
+                if is_override:
+                    exists=self.definition_table[-1].check_override_method(id,self.dt_type + self.param_type)
+                    if not exists:
+                        raise CustomError(f"no method {id} exists in parent for override")
+                self.insert_mt(id, self.dt_type + self.param_type, self.am,is_abstract)
+                if is_abstract:
+                    if self.check_next_token(";"):
                         self.accept_token()
                     else:
-                        raise ("Exception")
+                        raise CustomError(f"abstract method {id} cannot have a body")
                 else:
-                    raise ("Exception")
+                    if self.check_next_token("{"):
+                        self.accept_token()
+                        self.MST()
+                        if self.check_next_token("}"):
+                            self.scope.pop()
+                            self.accept_token()
+                        else:
+                            raise ("Exception")
+                    else:
+                        raise CustomError(f"No body provided for method {id}")
             else:
                 raise ("Exception")
         elif self.check_next_token("="):
+            if is_abstract:
+                raise CustomError("Only methods can be abstract")
+            if is_override:
+                raise CustomError("Only methods can be override")
             self.put_value()
             if self.check_next_token(";"):
                 self.accept_token()
-                self.insert_mt(id,self.dt_type,self.am)
+                self.insert_mt(id, self.dt_type, self.am)
             else:
                 raise ("Exception")
         elif self.check_next_token(";"):
-            self.insert_mt(id,self.dt_type,self.am)
+            if is_abstract:
+                raise CustomError("Only methods can be abstract")
+            if is_override:
+                raise CustomError("Only methods can be override")
+            self.insert_mt(id, self.dt_type, self.am)
             self.accept_token()
 
     def Dec(self):
@@ -1011,7 +1055,10 @@ class Parser:
                 # self.expression.append(put_result(type.split("=>")[0]))
                 self.param_type = ""
                 self.accept_token()
-                self.OP_Id_loop(type)
+                if self.check_next_token(";"):
+                    pass
+                else:
+                    self.OP_Id_loop(type)
             else:
                 raise ("Exception")
         elif self.check_next_token("."):
@@ -1304,7 +1351,7 @@ class Parser:
                 self.accept_token()
                 if self.check_next_token("{"):
                     self.accept_token()
-                    self.insert_dt(temp_id,"interface","public")
+                    self.insert_dt(temp_id, "interface", "public")
                     self.IST()
                     if self.check_next_token("}"):
                         self.accept_token()
@@ -1335,14 +1382,14 @@ class Parser:
             else:
                 raise Exception("Invalid")
 
-    def Inter_Dec_Var_func(self,id):
+    def Inter_Dec_Var_func(self, id):
         if self.check_next_token("("):
             self.accept_token()
             self.param_type = ""
             self.is_params()
             if self.check_next_token(")"):
                 self.accept_token()
-                self.insert_mt(id,self.dt_type+self.param_type)
+                self.insert_mt(id, self.dt_type + self.param_type)
             else:
                 raise Exception("Invalid")
         elif self.check_next_token(","):
@@ -1352,13 +1399,13 @@ class Parser:
         else:
             raise Exception("Invalid")
 
-    def I_List(self,id):
-        self.insert_mt(id,self.dt_type)
+    def I_List(self, id):
+        self.insert_mt(id, self.dt_type)
         if self.check_next_token(","):
             self.accept_token()
             if self.check_next_token_by_class("Id"):
                 self.Id = self.allTokens[self.token_index]["value"]
-                temp_id= self.allTokens[self.token_index]["value"]
+                temp_id = self.allTokens[self.token_index]["value"]
                 self.accept_token()
                 self.I_List(temp_id)
             else:
