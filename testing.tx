@@ -6,13 +6,20 @@ public abstract class cc{
     public abstract number mm(string lk);
     public string ll(){
         ??mm("Asdsa");
+        return "asa";
     } 
     
 }
 
 public class mm:cc{
-    public number[] ms=[1];
-    public override number mm(string lk){}
+    public number ms=1;
+    public override number mm(string lk){
+        string kk="yuy";
+        return 23;
+    }
+    public void mmas(string lk){
+        
+    }
     
 }
 

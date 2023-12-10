@@ -25,6 +25,8 @@ class Parser:
         self.constructors = []
         self.turn = 0
         self.param_type = ""
+        self.return_type=""
+        self.returned=False
         self.expression = []
 
     def check_next_token_by_class(self, expected_value):
@@ -341,11 +343,11 @@ class Parser:
     def dt_or_id(self):
         if self.check_next_token_by_class("DataType"):
             self.param_type += self.allTokens[self.token_index]["value"]
-            self.dt_type = self.allTokens[self.token_index]["value"]
+            # self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         elif self.check_next_token_by_class("Id"):
             self.param_type += self.allTokens[self.token_index]["value"]
-            self.dt_type = self.allTokens[self.token_index]["value"]
+            # self.dt_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
         else:
             raise ("Exception")
@@ -380,7 +382,13 @@ class Parser:
                     override = self.isoverride()
                     if self.check_next_token("abstract"):
                         raise CustomError("Only abstract class can have abstract methods")
-                self.dt()
+                if self.check_next_token("void"):
+                    self.dt_type=self.allTokens[self.token_index]["value"]
+                    self.returned=True
+                    self.accept_token()
+                else:    
+                    self.returned=False
+                    self.dt()
                 if self.check_next_token_by_class("Id"):
                     self.Id = self.allTokens[self.token_index]["value"]
                     temp_id = self.allTokens[self.token_index]["value"]
@@ -827,8 +835,11 @@ class Parser:
                 else:
                     if self.check_next_token("{"):
                         self.accept_token()
+                        self.return_type=self.dt_type
                         self.MST()
                         if self.check_next_token("}"):
+                            if not self.returned and self.return_type!="void":
+                                raise CustomError(f"Method {id} should have a return statement")
                             self.scope.pop()
                             self.accept_token()
                         else:
@@ -881,6 +892,20 @@ class Parser:
             self.accept_token()
             self.if_stat()
             self.MST()
+        elif self.check_next_token("return"):
+            if self.return_type=="void":
+                raise CustomError(f"Void function cannot have return type")
+            self.returned=True
+            self.accept_token()
+            self.expression = []
+            self.exp()
+            temp_type = build_expression_tree_with_types(self.expression)
+            self.compatibility_check(temp_type,self.return_type)
+            if self.check_next_token(";"):
+                self.accept_token()
+            else:
+                raise Exception("Expected semicolon")    
+            self.MST()
         elif self.check_next_token("for"):
             self.accept_token()
             self.for_loop()
@@ -917,6 +942,11 @@ class Parser:
                 raise ("Exception")
         else:
             pass
+
+    def return_stat(self):
+        if self.check_next_token("return"):
+            self.accept_token()
+        
 
     def dts(self):
         if self.check_next_token_by_class("number"):
@@ -1185,11 +1215,9 @@ class Parser:
             or self.check_next_token("(")
             or self.check_next_token(".")
         ):
-            # temp_type= self.check_variable_exist(self.Id)["type"]
             self.OP_ex_Id(type)
             self.func_call_Id_set_class_init(self.dt_type)
         elif self.check_next_token("="):
-            # self.check_variable_exist(self.Id)
             self.accept_token()
             self.expression = []
             self.exp()
@@ -1199,7 +1227,6 @@ class Parser:
         elif self.check_next_token_by_class("Id"):
             self.class_init_or_not(type)
         elif self.check_next_token("++") or self.check_next_token("--"):
-            # self.check_variable_exist(self.Id)
             self.accept_token()
         elif self.check_next_token(";"):
             # self.accept_token()
