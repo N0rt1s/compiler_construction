@@ -114,10 +114,10 @@ class Parser:
 
         self.interface.append(existing_object[0])
 
-    def insert_st(self):
+    def insert_st(self,dt):
         if self.turn == 0:
             for item in self.var_Id:
-                inserted = self.scope[-1].declare_variable(item, self.dt_type)
+                inserted = self.scope[-1].declare_variable(item, dt)
                 if not inserted:
                     raise CustomError(f"The variable {item} already Declared.")
             self.var_Id = []
@@ -133,9 +133,9 @@ class Parser:
                 )
                 self.am = ""
 
-    def insert_mt(self, id="", type="", am="",abstract=False):
+    def insert_mt(self, id="", type="", am="",abstract=False,isFunc=False):
         if self.turn == 0:
-            inserted = self.definition_table[-1].declare_variable(id, type, am,abstract)
+            inserted = self.definition_table[-1].declare_variable(id, type, am,abstract,isFunc)
             self.am = ""
 
             if not inserted:
@@ -152,10 +152,10 @@ class Parser:
     def object_compatibility(self, typeId, classId):
         if typeId != classId:
             existing_class = list(
-                filter(lambda x: (x.Id == typeId), self.definition_table)
+                filter(lambda x: (x.Id == classId), self.definition_table)
             )
             if len(existing_class) != 0:
-                exists = existing_class[-1].check_parent_compatibility(classId)
+                exists = existing_class[-1].check_parent_compatibility(typeId)
                 if not exists:
                     raise CustomError(f"No valid type class {classId} exist.")
             else:
@@ -306,6 +306,7 @@ class Parser:
                         self.current_class_scope,
                         self.current_class_scope + self.param_type,
                     )
+                    self.return_type="constructor"
                     if self.check_next_token("{"):
                         self.accept_token()
                         self.MST()
@@ -331,10 +332,10 @@ class Parser:
             self.parameters()
 
     def parameters(self):
-        self.dt_or_id()
+        temp_type=self.dt_or_id()
         if self.check_next_token_by_class("Id"):
             self.var_Id.append(self.allTokens[self.token_index]["value"])
-            self.insert_st()
+            self.insert_st(temp_type)
             self.accept_token()
             self.more_params()
         else:
@@ -343,12 +344,14 @@ class Parser:
     def dt_or_id(self):
         if self.check_next_token_by_class("DataType"):
             self.param_type += self.allTokens[self.token_index]["value"]
-            # self.dt_type = self.allTokens[self.token_index]["value"]
+            temp_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
+            return temp_type
         elif self.check_next_token_by_class("Id"):
             self.param_type += self.allTokens[self.token_index]["value"]
-            # self.dt_type = self.allTokens[self.token_index]["value"]
+            temp_type = self.allTokens[self.token_index]["value"]
             self.accept_token()
+            return temp_type
         else:
             raise ("Exception")
 
@@ -699,9 +702,10 @@ class Parser:
             self.scope.append(St_Scope(self.scope[-1]))
             self.symbol_table.append(self.scope[-1])
             self.accept_token()
+            temp_type=self.dt_or_id()
             if self.check_next_token_by_class("Id"):
                 self.var_Id.append(self.allTokens[self.token_index]["value"])
-                self.insert_st()
+                self.insert_st(temp_type)
                 self.accept_token()
                 if self.check_next_token("in"):
                     self.accept_token()
@@ -826,7 +830,7 @@ class Parser:
                     exists=self.definition_table[-1].check_override_method(id,self.dt_type + self.param_type)
                     if not exists:
                         raise CustomError(f"no method {id} exists in parent for override")
-                self.insert_mt(id, self.dt_type + self.param_type, self.am,is_abstract)
+                self.insert_mt(id, self.dt_type + self.param_type, self.am,is_abstract,True)
                 if is_abstract:
                     if self.check_next_token(";"):
                         self.accept_token()
@@ -875,7 +879,7 @@ class Parser:
             self.list()
             self.put_value()
             if self.check_next_token(";"):
-                self.insert_st()
+                self.insert_st(self.dt_type)
                 self.accept_token()
             else:
                 raise ("Exception")
@@ -895,6 +899,10 @@ class Parser:
         elif self.check_next_token("return"):
             if self.return_type=="void":
                 raise CustomError(f"Void function cannot have return type")
+            
+            if self.return_type=="constructor":
+                raise CustomError(f"Constructors cannot have return type")
+            
             self.returned=True
             self.accept_token()
             self.expression = []
@@ -1078,7 +1086,7 @@ class Parser:
             self.is_param_value()
             if self.check_next_token(")"):
                 self.compatibility_check(
-                    type.split(">")[1], self.param_type.split(">")[1]
+                    type.split("=>")[1] if type.__contains__("=>")else "", self.param_type.split("=>")[1] if self.param_type.__contains__("=>")else self.param_type
                 )
                 self.expression = temp_exp
                 # self.dt_type = temp_type
@@ -1164,7 +1172,7 @@ class Parser:
             self.is_param_value()
             if self.check_next_token(")"):
                 self.compatibility_check(
-                    type.split(">")[1], self.param_type.split(">")[1]
+                    type.split("=>")[1] if type.__contains__("=>")else "", self.param_type.split("=>")[1] if self.param_type.__contains__("=>")else self.param_type
                 )
                 self.expression = temp_exp
                 # self.dt_type = temp_type
@@ -1258,7 +1266,7 @@ class Parser:
                                 )
                                 self.dt_type = self.Id
                                 self.var_Id.append(id)
-                                self.insert_st()
+                                self.insert_st(self.dt_type)
                                 self.accept_token()
                             else:
                                 raise ("Exception")

@@ -36,10 +36,14 @@ class Mt_Scope:
         self.is_abstract = isabstract
         self.interfaces = interfaces
 
-    def declare_variable(self, name, type, am,is_abstract=False):
+    def declare_variable(self, name, type, am,is_abstract=False,isFunc=False):
         for symbol in self.members:
-            if symbol["id"] == name:
-                return False
+            if isFunc:
+                if symbol["id"] == name and symbol["type"]==type:
+                    return False
+            else:    
+                if symbol["id"] == name:
+                    return False
         self.members.append({"id": name, "type": type, "am": am,"abstract":is_abstract})
         return True
 
@@ -107,7 +111,7 @@ def get_result_type(operator, left, right):
 
 
 def get_operand_type(id):
-    if re.match(r"true|false$", id):
+    if id=="true" or id=="false":
         return "bool"
     elif re.match(r'^"[^"]*"$', id):
         return "string"
@@ -115,12 +119,11 @@ def get_operand_type(id):
     elif re.match(r"'(?:\\.|[^\\'])'", id):
         return "char"
 
-    elif re.match(r"[0-9]+", id):
+    elif re.match(r"-?\d*\.?\d+", id):
         return "number"
     else:
-        return "number"
+        return id
 
-    pass
 
 
 def get_precedence(operator):
@@ -187,6 +190,7 @@ def put_result(ty):
         return '""'
     if(ty=="bool"):
         return "true"
+    return ty
 
 
 # infix_expression = ['5', '+', '8', '*', '(', '6', '-', "7", ')', '+', 'id']
